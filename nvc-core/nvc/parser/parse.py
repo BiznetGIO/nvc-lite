@@ -1,15 +1,15 @@
-from ami.libs import utils
+from nvc.libs import utils
 
 playbook_dir = utils.app_cwd+"/playbook"
 
 # def get_repo():
 #     return  utils.nvc_repo()
 
-# def initial_parse(ami_json):
+# def initial_parse(nvc_json):
 #     repo = get_repo()
 #     github_url = None
 #     initial_data = dict()
-#     for i in ami_json:
+#     for i in nvc_json:
 #         data = dict()
 #         for a in repo:
 #             github_url = repo[a][i]['url']
@@ -17,7 +17,7 @@ playbook_dir = utils.app_cwd+"/playbook"
 #             for params in parameter:
 #                 params_value = None
 #                 try:
-#                     params_value = ami_json[i][params]
+#                     params_value = nvc_json[i][params]
 #                 except Exception:
 #                     params_value = None
 #                 if params_value is None:
@@ -30,12 +30,12 @@ playbook_dir = utils.app_cwd+"/playbook"
 #     return initial_data
 
 
-def initial_parsed(ami_json):
+def initial_parsed(nvc_json):
     repo = utils.nvc_config()
     github_url = None
     initial_data = dict()
     packager = None
-    for i in ami_json:
+    for i in nvc_json:
         packager = i
         data = dict()
         for a in repo:
@@ -44,7 +44,7 @@ def initial_parsed(ami_json):
             for params in parameter:
                 params_value = None
                 try:
-                    params_value = ami_json[i][params]
+                    params_value = nvc_json[i][params]
                 except Exception:
                     params_value = None
                 if params_value is None:
@@ -70,9 +70,17 @@ def initial_tree(initial_data):
     if not checks:
         utils.log_err("Repo Not Cloning")
         exit()
+    else:
+        utils.rm_dir(playbook_dir+"/nvc-core")
+        utils.rm_dir(playbook_dir+"/nvc-heat")
+        utils.copy(playbook_dir+"/nvc-package/roles", playbook_dir+"/roles")
+        utils.copy(playbook_dir+"/nvc-package/vars", playbook_dir+"/vars")
+        utils.rm_dir(playbook_dir+"/nvc-package")
+    
     host = "[nvc_lite]\nlocalhost ansible_connection=local"
     utils.create_file("inventory", playbook_dir, host)
-    checks = utils.yaml_writeln([playbook],playbook_dir+"/ami.yml")
+    checks = utils.yaml_writeln([playbook],playbook_dir+"/nvc.yml")
+    remove_package_dir = utils.os.listdir(playbook_dir+"/roles")
     if not checks:
         utils.log_err("Playbook Not Created")
         exit()
@@ -82,6 +90,9 @@ def initial_tree(initial_data):
         folder_task = folder_path+"/tasks"
         if not utils.check_folder(folder_path):
             utils.create_folder(folder_path)
+        if i in remove_package_dir:
+            index = remove_package_dir.index(i)
+            remove_package_dir.pop(index)   
         handlers = roles_item[i]['handlers']
         tasks = roles_item[i]['tasks']
         if handlers:
@@ -93,6 +104,9 @@ def initial_tree(initial_data):
     # Parse Variabels
     vars_data = initial_vars(playbook, packager)
     utils.yaml_writeln(vars_data, playbook_dir+"/vars/all.yml")
+    # cleaning package
+    for rm in remove_package_dir:
+        utils.rm_dir(playbook_dir+"/roles/"+rm)
 
 
 def initial_vars(playbook, packager):

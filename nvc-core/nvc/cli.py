@@ -1,6 +1,6 @@
 """
 Usage:
-  ami <command> [<args>...]
+  nvc <command> [<args>...]
 
 Options:
   -h, --help                             display this help and exit
@@ -11,17 +11,17 @@ Commands:
   variabel                               Variabel Command
   rm                                     Remove Command
 
-Run 'ami COMMAND --help' for more information on a command.
+Run 'nvc COMMAND --help' for more information on a command.
 """
 
 from inspect import getmembers, isclass
 from docopt import docopt, DocoptExit
-from ami import __version__ as VERSION
+from nvc import __version__ as VERSION
 
 
 def main():
     """Main CLI entrypoint."""
-    import ami.clis
+    import nvc.clis
     options = docopt(__doc__, version=VERSION, options_first=True)
     command_name = ""
     args = ""
@@ -34,9 +34,9 @@ def main():
         args = {}
 
     try:
-        module = getattr(ami.clis, command_name)
-        ami.clis = getmembers(module, isclass)
-        command_class = [command[1] for command in ami.clis if command[0] != 'Base'][0]
+        module = getattr(nvc.clis, command_name)
+        nvc.clis = getmembers(module, isclass)
+        command_class = [command[1] for command in nvc.clis if command[0] != 'Base'][0]
     except AttributeError as e:
         print(e)
         raise DocoptExit()

@@ -1,4 +1,4 @@
-from ami.libs import utils
+from nvc.libs import utils
 
 
 def show_variabels_all(packet_manager):

@@ -9,7 +9,7 @@ import hashlib
 import uuid
 import fileinput
 import requests
-from ami import __appname__
+from nvc import __appname__
 from dotenv import load_dotenv
 import git
 

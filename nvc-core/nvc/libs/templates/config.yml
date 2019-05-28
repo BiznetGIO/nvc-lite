@@ -1,6 +1,6 @@
 config:
   apt:
-    url: "https://github.com/ami-project/ami-packages.git"
+    url: "https://github.com/BiznetGIO/nvc-lite.git"
     description: "Template that installs NVC Lite ubuntu."
     parameters:
       vars:
@@ -38,7 +38,7 @@ config:
           - flask
           - drupal
   yum:
-    url: "https://github.com/ami-project/ami-packages.git"
+    url: "https://github.com/BiznetGIO/nvc-lite.git"
     description: "Template that installs NVC Lite Centos."
     parameters:
       vars:

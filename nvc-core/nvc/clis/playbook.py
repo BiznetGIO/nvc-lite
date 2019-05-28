@@ -1,8 +1,8 @@
-from ami.clis.base import Base
+from nvc.clis.base import Base
 from signal import signal, SIGINT
-from ami.libs import utils
-from ami.parser import parse
-from ami.libs import ansible_lib, playbook_lib
+from nvc.libs import utils
+from nvc.parser import parse
+from nvc.libs import ansible_lib, playbook_lib
 import yaml
 import os
 
@@ -14,7 +14,7 @@ class Playbook(Base):
         playbook start [-f FILE]
         playbook create [-p PACKGE] [-a APPS]
 
-        Run ami playbook [command] [option]
+        Run nvc playbook [command] [option]
 
         Options:
         -f file --file=FILE                                        File
@@ -30,7 +30,7 @@ class Playbook(Base):
             pkg = self.args['--package']
             apps = self.args['--apps']
             data_playbook = playbook_lib.playbook_create(pkg, apps)
-            utils.yaml_writeln(data_playbook, app_dir+"/ami.yml")
+            utils.yaml_writeln(data_playbook, app_dir+"/nvc.yml")
             exit()
         
         if self.args['configure']:
@@ -42,7 +42,7 @@ class Playbook(Base):
                     utils.log_err(e)
             else:
                 try:
-                    path = utils.yaml_read("ami.yml")
+                    path = utils.yaml_read("nvc.yml")
                 except Exception as e:
                     utils.log_err(e)
                     exit()
@@ -62,11 +62,11 @@ class Playbook(Base):
         if self.args['start']:
             path = None
             if self.args['--file']:
-                ami_file = self.args['--file']
+                nvc_file = self.args['--file']
             else:
-                ami_file = playbook_dir+"/ami.yml"
+                nvc_file = playbook_dir+"/nvc.yml"
             try:
-                ansible_lib.playbook_file(playbook=ami_file, 
+                ansible_lib.playbook_file(playbook=nvc_file, 
                                           inventory=playbook_dir+"/inventory")
             except Exception as e:
                 utils.log_err(e)
@@ -74,7 +74,7 @@ class Playbook(Base):
                 utils.log_warn("Prosess Cancelling")
                 print("User Canceling Progress Note: if there is an error \
                         access password, please delete the roles \
-                        package in ami.yml")
+                        package in nvc.yml")
             else:
                 utils.log_rep("Package Finished Setup")
             exit()
