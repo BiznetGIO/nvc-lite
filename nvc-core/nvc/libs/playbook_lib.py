@@ -1,12 +1,12 @@
-from ami.libs import utils
+from nvc.libs import utils
 
 app_dir = utils.app_cwd
 
 
 def playbook_create_json(json, app_name):
-    ami_file = app_dir+"/"+app_name+"/ami.yml"
+    nvc_file = app_dir+"/"+app_name+"/nvc.yml"
     try:
-        utils.yaml_writeln(json, ami_file)
+        utils.yaml_writeln(json, nvc_file)
     except Exception as e:
         utils.log_err(e)
     else:

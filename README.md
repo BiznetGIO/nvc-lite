@@ -9,7 +9,7 @@ NVC Heat support provision to neo-cli
 
 ## NVC PACKAGE
 
-### STACK
+### Stack
 - nginx
 - mean | under construction
 - gitlab | not tested

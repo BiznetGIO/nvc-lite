@@ -6,7 +6,7 @@ from ansible.playbook.play import Play
 from ansible.executor.task_queue_manager import TaskQueueManager
 from ansible.plugins.callback import CallbackBase
 from ansible.executor.playbook_executor import PlaybookExecutor
-from ami.libs import utils
+from nvc.libs import utils
 import ansible.constants as C
 import os
 import json

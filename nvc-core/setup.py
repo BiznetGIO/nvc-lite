@@ -4,7 +4,7 @@ from codecs import open
 from os.path import abspath, dirname, join
 from subprocess import call
 from setuptools import Command, find_packages, setup
-from ami import __version__
+from nvc import __version__
 
 this_dir = abspath(dirname(__file__))
 with open(join(this_dir, 'README.md'), encoding='utf-8') as file:
@@ -32,11 +32,11 @@ class RunTests(Command):
 
 
 setup(
-    name='ami',
+    name='nvc',
     version=__version__,
     description='CLOUD BACKEND',
     long_description=long_description,
-    url='https://github.com/meongbego/ami-core',
+    url='https://github.com/meongbego/nvc-core',
     author='Sofyan Saputra',
     author_email='sofyan@biznetgio.com',
     license='MIT',
@@ -51,7 +51,7 @@ setup(
         'Programming Language :: Python :: 3.5',
         'Programming Language :: Python :: 3.6'
     ],
-    keywords='ami-core',
+    keywords='nvc-core',
     include_package_data=True,
     packages=find_packages(exclude=['docs', 'tests*']),
     install_requires=install_requires,
@@ -61,7 +61,7 @@ setup(
     },
     entry_points={
         'console_scripts': [
-            'ami=ami.cli:main',
+            'nvc=nvc.cli:main',
         ],
     },
     cmdclass={'test': RunTests},

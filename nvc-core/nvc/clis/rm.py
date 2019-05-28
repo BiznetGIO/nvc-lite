@@ -1,8 +1,8 @@
-from ami.clis.base import Base
+from nvc.clis.base import Base
 from signal import signal, SIGINT
-from ami.libs import utils
-from ami.parser import parse
-from ami.libs import playbook_lib
+from nvc.libs import utils
+from nvc.parser import parse
+from nvc.libs import playbook_lib
 import yaml
 import os
 
@@ -13,7 +13,7 @@ class Rm(Base):
         rm playbook [-f FILE]
         rm roles [-r ROLES]
 
-        Run ami rm [command] [option]
+        Run nvc rm [command] [option]
 
         Options:
         -f file --file=FILE                                       File
@@ -51,20 +51,20 @@ class Rm(Base):
             if not roles_item:
                 roles_item = input("Insert Name Roles: ")
             try:
-                ami_file = utils.yaml_read(app_dir+"/ami.yml")
+                nvc_file = utils.yaml_read(app_dir+"/nvc.yml")
             except Exception as e:
                 utils.log_err(e)
                 exit()
             a = 0
-            for i in ami_file['yum']['roles']:
+            for i in nvc_file['yum']['roles']:
                 if roles_item == i:
-                    ami_file['yum']['roles'].pop(a)
-                    ami_file['yum']['vars'].pop(i)
+                    nvc_file['yum']['roles'].pop(a)
+                    nvc_file['yum']['vars'].pop(i)
                 a = a+1
             try:
-                if utils.read_file(app_dir+"/ami.yml"):
-                    os.remove(app_dir+"/ami.yml")
-                utils.yaml_writeln(ami_file, app_dir+"/ami.yml")
+                if utils.read_file(app_dir+"/nvc.yml"):
+                    os.remove(app_dir+"/nvc.yml")
+                utils.yaml_writeln(nvc_file, app_dir+"/nvc.yml")
             except Exception as e:
                 utils.log_err(e)
                 exit()

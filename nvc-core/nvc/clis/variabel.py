@@ -1,6 +1,6 @@
-from ami.clis.base import Base
+from nvc.clis.base import Base
 from signal import signal, SIGINT
-from ami.libs import utils, vars_lib
+from nvc.libs import utils, vars_lib
 import yaml
 import os
 
@@ -11,7 +11,7 @@ class Variabel(Base):
         variabel show [-p PACKAGE]
         variabel show  [-p PACKAGE] [-a APPS]
 
-        Run ami variable [command] [option]
+        Run nvc variable [command] [option]
 
         Options:
         -p package --package=PACKAGE                              Set Distro Based | yum or apt

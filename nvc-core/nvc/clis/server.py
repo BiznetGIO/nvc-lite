@@ -1,6 +1,6 @@
-from ami.clis.base import Base
+from nvc.clis.base import Base
 from signal import signal, SIGINT
-from ami.libs import utils
+from nvc.libs import utils
 import yaml
 import os
 
@@ -12,7 +12,7 @@ class Server(Base):
         server memory
         server disk
 
-        Run ami server [command] [option]
+        Run nvc server [command] [option]
 
         Options:
         -h --help                                                 Print usage
