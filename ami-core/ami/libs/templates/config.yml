@@ -1,0 +1,81 @@
+config:
+  apt:
+    url: "https://github.com/ami-project/ami-packages.git"
+    description: "Template that installs NVC Lite ubuntu."
+    parameters:
+      vars:
+        label: Global Variabels
+        type: list
+      gather_facts:
+        type: boolean
+        label: gather option
+        default: 'no'
+      hosts:
+        type: string
+        label: host for execute
+        default: all
+      vars_files:
+        label: Global Variabels
+        type: list
+        default:
+          - vars/all.yml
+      roles:
+        label: Global Variabels
+        type: list
+        rules:
+          - php
+          - php5
+          - commons
+          - composer
+          - mariadb
+          - mysql
+          - nginx
+          - apache
+          - node
+          - ufw
+          - wordpress
+          - joomla
+          - flask
+          - drupal
+  yum:
+    url: "https://github.com/ami-project/ami-packages.git"
+    description: "Template that installs NVC Lite Centos."
+    parameters:
+      vars:
+        label: Global Variabels
+        type: list
+      gather_facts:
+        type: boolean
+        label: gather option
+        default: 'no'
+      hosts:
+        type: string
+        label: host for execute
+        default: all
+      vars_files:
+        label: Global Variabels
+        type: list
+        default:
+          - vars/all.yml
+      roles:
+        label: Global Variabels
+        type: list
+        rules:
+          - php
+          - php5
+          - commons
+          - composer
+          - mariadb
+          - mysql
+          - nginx
+          - apache
+          - node
+          - ufw
+          - wordpress
+          - joomla
+          - flask
+          - drupal
+          - zabbix
+          - magento
+          - mongodb
+          - mean

@@ -1,0 +1,19 @@
+exclude .gitignore
+exclude .coverage
+exclude .travis.yml
+include README.md
+include setup.cfg
+include requirements.txt
+include .env
+include ami/libs/templates/repo.yml
+include ami/libs/templates/config.yml
+include ami/libs/templates/apt/roles/item.yml
+include ami/libs/templates/apt/vars/config.yml
+include ami/libs/templates/yum/roles/item.yml
+include ami/libs/templates/yum/vars/config.yml
+prune .cache
+prune .git
+prune build
+prune dist
+recursive-exclude *.egg-info *
+recursive-include tests *

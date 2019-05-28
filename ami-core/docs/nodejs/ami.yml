@@ -1,0 +1,6 @@
+apt:
+  hosts: all
+  roles:
+    - commons
+    - node
+

@@ -1,0 +1,9 @@
+yum:
+  hosts: all
+  roles:
+    - commons
+    - flask
+  vars:
+    flask:
+      project_path: /home/ubuntu/flask_testing
+

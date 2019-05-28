@@ -1,0 +1,18 @@
+yum:
+  hosts: all
+  roles:
+    - commons
+    - mariadb
+    - nginx
+    - php
+    - composer
+    - drupal
+  vars:
+    mariadb:
+      password: password
+    drupal:
+      db_name: testing
+      username: iank
+      password: qwerty123
+      site_url: ""
+      email: meongbego@gmail.com

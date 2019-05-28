@@ -1,0 +1,215 @@
+vars:
+  package:
+    commons:
+      parameters:
+        install:
+          type: string
+          label: Install Priority
+          default: '1'
+        packages:
+          type: list
+          label: Packages List
+          default: [ curl, wget, fail2ban, git, vim, htop, acl, firewalld, epel-release]
+        timezone:
+          type: string
+          label: Timezone Setting
+          default: 'UTC'
+    nginx:
+      parameters:
+        install:
+          type: string
+          label: Install Priority
+          default: '1'
+        docroot:
+          type: string
+          label: Document root
+          default: '/var/www/html'
+        servername:
+          type: string
+          label: Document root
+          default: '_'
+        group:
+          type: string
+          label: Document root
+          default: 'nginx'
+    php:
+      parameters:
+        version:
+          type: string
+          label: Document root
+          default: "7.2"
+        install:
+          type: string
+          label: Install Priority
+          default: '1'
+        packages:
+          type: list
+          label: Packages List
+          default: [php-cli, php-common, php-curl, php-devel, php-gd, php-mbstring, php-mysql, php-xml, php-xmlrpc, php-memcached, php-zip]
+    php5:
+      parameters:
+        version:
+          type: string
+          label: Document root
+          default: "5.6"
+        install:
+          type: string
+          label: Install Priority
+          default: '1'
+        packages:
+          type: list
+          label: Packages List
+          default: [php-cli, php-common, php-curl, php-devel, php-gd, php-mbstring, php-mcrypt, php-mysql, php-xml, php-xmlrpc, php-memcached, php-zip]
+    mariadb:
+      parameters:
+        password:
+          type: string
+          label: Mariadb Root Password
+    wordpress:
+      parameters:
+        db_name:
+          type: string
+          label: Wordpress DB Name
+        root_dir:
+          type: variabels
+          label: Root Dir For Wordpress
+          default: "{{ nginx.docroot }}"
+        username:
+          type: string
+          label: Wordpress And DB Username
+        password:
+          type: string
+          label: Wordpress And DB Password
+        wp_url:
+          type: string
+          label: Wordpress URL
+        email:
+          type: string
+          label: Wordpress Emails
+        title:
+          type: string
+          label: Wordpress Titels
+          default: "NEO"
+    drupal:
+      parameters:
+        version:
+          type: string
+          label: Document root
+          default: "8.7.1"
+        db_name:
+          type: string
+          label: Drupal DB Name
+          default: wordpress
+        root_dir:
+          type: variabels
+          label: Root Dir For Drupal
+          default: "{{ nginx.docroot }}"
+        username:
+          type: string
+          label: Drupal And DB Username
+          default: admin
+        password:
+          type: string
+          label: Drupal And DB Password
+          default: admin
+        site_url:
+          type: string
+          label: Drupal URL
+          default: localhost
+        email:
+          type: string
+          label: Drupal Emails
+          default: admin@admin.com
+    node:
+      parameters:
+        install:
+          type: string
+          label: Install Priority
+          default: '1'
+    firewalld:
+      parameters:
+        install:
+          type: string
+          label: Install Priority
+          default: '1'
+    joomla:
+      parameters:
+        install:
+          type: string
+          label: Install Priority
+          default: '1'
+    flask:
+      parameters:
+        install:
+          type: string
+          label: Install Priority
+          default: '1'
+        project_path:
+          type: string
+          label: Install Priority
+          default: '/home/ubuntu/flask_app'
+    apache:
+      parameters:
+        install:
+          type: string
+          label: Install Priority
+          default: '1'
+    composer:
+      parameters:
+        install:
+          type: string
+          label: Install Priority
+          default: '1'
+    magento:
+      parameters:
+        username:
+          type: string
+          label: Magento Username And Database username
+        password:
+          type: string
+          label: Magento Username And Database password
+        site_url:
+          type: string
+          label: Magento site url
+          default: "localhost"
+        db_name:
+          type: string
+          label: Magento Database Name
+          default: "magento"
+        email:
+          type: string
+          label: Magento Email Name
+        currency:
+          type: string
+          label: Magento currency
+          default: IDR
+    gitlab:
+      parameters:
+        site_url:
+          type: string
+          label: Gitlab site url
+          default: "localhost"
+    zabbix:
+      parameters:
+        username:
+          type: string
+          label: Zabbix Username And Database username
+        password:
+          type: string
+          label: Magento Username And Database password
+        db_name:
+          type: string
+          label: Zabbix Database Name
+          default: "zabbix"
+    mongodb:
+      parameters:
+        install:
+          type: string
+          label: Install Priority
+          default: '1'
+    mean:
+      parameters:
+        packages:
+          type: list
+          label: Packages List
+          default: [gcc-c++, git, make, htop, fontconfig, bzip2, libpng-devel, ruby, ruby-devel]

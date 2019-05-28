@@ -1,0 +1,303 @@
+php:
+  handlers:
+    - name: restart php7.2-fpm
+      service: name=php7.2-fpm enabled=yes state=restarted
+    - name: restart nginx
+      service:
+        name: nginx
+        state: restarted
+  tasks:
+    - name: Update apt
+      apt: update_cache=yes
+    - name: Install PHP
+      apt: pkg=php7.2 state=latest
+    - name: Install php7-fpm
+      apt: pkg=php7.2-fpm state=latest
+    - name: Install PHP Packages
+      apt: pkg={{ php.packages }} state=latest
+    - stat: path=/etc/php/7.2/fpm/php.ini
+      register: phpfpm
+    - stat: path=/etc/php/7.2/cli/php.ini
+      register: phpcli
+    - name: ensure timezone is set in cli php.ini
+      lineinfile:
+          dest: /etc/php/7.2/cli/php.ini
+          regexp: 'date.timezone ='
+          line: 'date.timezone = {{ commons.timezone }}'
+php5:
+  handlers:
+    - name: restart php5.6-fpm
+      service: name=php5.6-fpm enabled=yes state=restarted
+    - name: restart nginx
+      service:
+        name: nginx
+        state: restarted
+  tasks:
+    - name: Add PPA Repository
+      apt_repository:
+        repo: ppa:ondrej/{{ php5.ppa }}
+    - name: Update apt
+      apt: update_cache=yes
+    - name: Install PHP
+      apt: pkg=php5.6 state=latest
+    - name: Install php5.6-fpm
+      apt: pkg=php5.6-fpm state=latest
+    - name: Install PHP Packages
+      apt: pkg={{ php5.packages }} state=latest
+      when: php.packages is defined
+    - stat: path=/etc/php/5.6/fpm/php.ini
+      register: phpfpm
+    - stat: path=/etc/php/5.6/cli/php.ini
+      register: phpcli
+    - name: ensure timezone is set in cli php.ini
+      lineinfile:
+        dest: /etc/php/5.6/cli/php.ini
+        regexp: 'date.timezone ='
+        line: 'date.timezone = {{ commons.timezone }}'
+commons:
+  handlers:
+  tasks:
+    - name: Update apt
+      apt: update_cache=yes
+    - name: Install Extra Packages
+      apt: pkg={{ commons.packages }} state=latest update_cache=yes
+      when: commons.packages is defined
+
+composer:
+  handlers:
+  tasks:
+    - name: Install Composer
+      shell: curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/local/bin --filename=composer creates=/usr/local/bin/composer
+mariadb:
+  handlers:
+  tasks:
+    - name: Install MariaDB
+      apt:
+        name: mariadb-server
+        state: present
+        force: yes
+    - name: stop mariadb
+      shell: systemctl stop mariadb
+    - name: configure mariadb
+      shell: systemctl set-environment MYSQLD_OPTS="--skip-grant-tables --skip-networking"
+    - name: starting mariadb
+      shell: systemctl start mariadb
+    - name: update mysql root password for all root accounts
+      shell: mysql -e "UPDATE mysql.user SET Password = PASSWORD('{{mariadb.password}}') WHERE User = 'root'"
+    - name: update mysql root password for all root accounts
+      shell: mysql -e "FLUSH PRIVILEGES"
+    - name: Startup mariadb
+      shell: systemctl enable mariadb
+mysql:
+  handlers:
+  tasks:
+    - shell: hostname
+      register: current_hostname
+    - name: mysql | Install MySQL Packages
+      apt: pkg={{ mysql.packages }} state=latest
+    - name: mysql | Update root password for all root accounts
+      mysql_user: name=root host={{ item }} check_implicit_admin=yes password={{ mysql.root_password }} login_user=root login_password={{ mysql.root_password }}
+      with_items:
+        - "{{ inventory_hostname }}"
+        - 127.0.0.1
+        - ::1
+        - localhost
+      when: inventory_hostname != 'localhost'
+    - name: mysql | Create Databases
+      mysql_db: name={{ mysql.database }} state=present login_user=root login_password={{ mysql.root_password }}
+    - name: mysql | Import dump
+      mysql_db: name={{ mysql.database }} state=import login_user=root login_pasword={{ mysql.root_password }} target=/wwww/{{ mysql.dump }}
+      when: mysql.dump
+    - name: mysql | Ensure anonymous users are not in the database
+      mysql_user: name='' host={{ item }} state=absent login_user=root login_password={{ mysql.root_password }}
+      with_items:
+        - localhost
+nginx:
+  handlers:
+    - name: restart nginx
+      service:
+        name: nginx
+        state: restarted
+    - name: reload nginx
+      service:
+        name: nginx
+        state: reloaded
+  tasks:
+    - name: Install Nginx
+      package:
+        name: nginx
+        state: present
+        force: yes
+        update_cache: yes
+    - name: Add  Nginx.Conf
+      copy: src=nginx.conf dest=/etc/nginx owner=root group=root
+    - name: Add  Config
+      copy: src=h5bp dest=/etc/nginx owner=root group=root
+    - name: Symlink default site
+      template: src=default.j2 dest=/etc/nginx/conf.d/main.conf
+    - name: Creates directory
+      file:
+        path: /etc/nginx/modules
+        state: directory
+    - name: Set Nginx PID
+      lineinfile:
+        dest: /etc/nginx/nginx.conf
+        regexp: "^pid"
+        line: "pid /run/nginx.pid;"
+        state: present
+    - name: Set Nginx user
+      lineinfile:
+        dest: /etc/nginx/nginx.conf
+        regexp: "^user"
+        line: "user www-data;"
+        state: present
+apache:
+  handlers:
+    - name: restart httpd
+      service:
+        name: httpd
+        state: restarted
+    - name: reload httpd
+      service:
+        name: httpd
+        state: reloaded
+  tasks:
+    - name: Install Httpd
+      package:
+        name: apache2
+        state: present
+        force: yes
+        update_cache: yes
+node:
+  handlers:
+  tasks:
+    - name: Add Node source package
+      raw: curl -sL https://deb.nodesource.com/setup_6.x -o nodesource_setup.sh
+    - name: Update Source Package
+      raw: sudo bash nodesource_setup.sh
+    - name: Install Node
+      apt: pkg=nodejs state=latest
+    - name: Install NPM
+      apt: pkg=npm state=latest
+ufw:
+  handlers:
+  tasks:
+    - name: Enable Firewall
+      ufw:
+        state: enabled
+        policy: deny
+    - name: Allow HTTP
+      ufw:
+        rule: allow
+        port: 80
+        proto: tcp
+    - name: Allow HTTPS
+      ufw:
+        rule: allow
+        port: 443
+        proto: tcp
+    - name: Allow SSH
+      ufw:
+        rule: allow
+        port: 22
+        proto: tcp
+wordpress:
+  handlers:
+  tasks:
+    - mysql_user:
+        name: "{{ wordpress.username }}"
+        password: "{{ wordpress.password }}"
+        priv: "*.*:ALL"
+        host: localhost
+        state: present
+    - mysql_db:
+        name: "{{ wordpress.db_name }}"
+        state: present
+        login_user: "{{ wordpress.username }}"
+        login_password: "{{ wordpress.password }}"
+    - name: Install WP-CLI
+      get_url:
+        url: https://raw.githubusercontent.com/wp-cli/builds/gh-pages/phar/wp-cli.phar
+        dest: /usr/bin/wp
+        mode: 0755
+    - name: Removing All Value Root Dir
+      shell: rm -rf *
+      args:
+        chdir: /var/www/html
+    - name: Downloading Core
+      shell: wp core download --allow-root
+      args:
+        chdir: /var/www/html
+    - name: Configuring Core
+      shell: wp core config --dbname="{{ wordpress.db_name }}" --dbuser="{{ wordpress.username }}" --dbpass="{{ wordpress.password }}" --dbhost=localhost --dbprefix=wp_ --allow-root
+      args:
+        chdir: /var/www/html
+    - name: Installing Core
+      shell: wp core install --url="{{ wordpress.wp_url }}" --title="NVC LITE WORDPRESS" --admin_user="{{ wordpress.username }}" --admin_password="{{ wordpress.password }}" --admin_email="{{ wordpress.email }}" --allow-root
+      args:
+        chdir: /var/www/html
+    - name: Symlink default site
+      template: src=default.j2 dest=/etc/nginx/conf.d/main.conf
+    - name: Change Themes
+      shell: wp theme activate twentyseventeen --allow-root
+      args:
+        chdir: /var/www/html
+
+joomla:
+  handlers:
+  tasks:
+flask:
+  handlers:
+  tasks:
+    - name: Creates directory Flask
+      shell: mkdir {{ flask.project_path }}
+    - name: Install Virtualenv
+      package:
+        name: virtualenv
+        state: present
+        force: yes
+        update_cache: yes
+    - name: Setup Environment
+      shell: virtualenv -p python3 env
+      args:
+        chdir: "{{ flask.project_path }}"
+    - name: Installing Flask
+      shell: env/bin/pip install flask
+      args:
+        chdir: "{{ flask.project_path }}"
+drupal:
+  handlers:
+  tasks:
+    - name: clone Drush repository
+      git:
+        repo: https://github.com/drush-ops/drush.git
+        version: "9.3.0"
+        dest: /opt/drush
+    - name: install Drush dependencies with Composer
+      shell: composer install
+      args:
+        chdir: "/opt/drush"
+    - name: clone Drupal repository
+      git:
+        repo: http://git.drupal.org/project/drupal.git
+        version: "{{ drupal.version }}"
+        dest: "{{ drupal.root_dir }}"
+    - name: install Drupal dependencies with Composer
+      shell: composer install
+      args:
+        chdir: "{{ drupal.root_dir }}"
+        creates: "{{ drupal.root_dir }}/vendor/autoload.php"
+    - name: install Drupal
+      shell: drush si -y --site-name="NVC LITE" --account-name={{ drupal.username }} --account-pass="{{ drupal.password }}" --db-url=mysql://{{ drupal.username }}:{{ drupal.password }}@{{ hostvars['db-server']['ansible_default_ipv4']['address'] }}/{{ drupal.db_name }}
+      args:
+        chdir: "{{ drupal.root_dir }}"
+    - name: set permissions on the settings file
+      file:
+        path: "{{ drupal.root_dir }}/sites/default/settings.php"
+        mode: 0744
+    - name: set permissions on files direcotry
+      file:
+        path: "{{ drupal.root_dir }}/sites/default/files"
+        mode: 0777
+        state: directory
+        recurse: yes

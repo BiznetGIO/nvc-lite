@@ -1,0 +1,7 @@
+yum:
+  hosts: all
+  roles:
+    - commons
+    - mongodb
+    - node
+    - mean

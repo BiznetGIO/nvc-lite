@@ -1,0 +1,50 @@
+nvc:
+  ubuntu:
+    url: "https://github.com/ami-project/ami-playbook.git"
+    description: "Template that installs NVC Lite ubuntu."
+    parameters:
+      roles:
+        type: array
+        label: app roles
+      user:
+        type: string
+        label: users for execute
+        default: root
+      gather_facts:
+        type: boolean
+        label: gather option
+        default: 'no'
+      hosts:
+        type: string
+        label: host for execute
+        default: all
+      vars_files:
+        type: array
+        label: app roles
+        default:
+          - vars/all.yml
+
+  centos:
+    url: "https://github.com/ami-project/ami-playbook.git"
+    description: "Template that installs NVC Lite ubuntu."
+    parameters:
+      roles:
+        type: array
+        label: app roles
+      user:
+        type: string
+        label: users for execute
+        default: root
+      gather_facts:
+        type: boolean
+        label: gather option
+        default: 'no'
+      host:
+        type: string
+        label: host for execute
+        default: all
+      vars_files:
+        type: array
+        label: app roles
+        default:
+          - vars/all.yml
