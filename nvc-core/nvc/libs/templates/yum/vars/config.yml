@@ -9,7 +9,7 @@ vars:
         packages:
           type: list
           label: Packages List
-          default: [ curl, wget, fail2ban, git, vim, htop, acl, firewalld, epel-release]
+          default: [ curl, wget, fail2ban, git, vim, htop, acl, epel-release]
         timezone:
           type: string
           label: Timezone Setting
