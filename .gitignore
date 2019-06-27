@@ -113,3 +113,6 @@ docs/wp/playbook
 docs/flask/playbook
 docs/nodejs/playbook
 docs/drupal/playbook
+TEST*
+neo-openstackv2/*
+test*
