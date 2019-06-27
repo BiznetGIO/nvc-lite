@@ -62,11 +62,13 @@ php5:
     - name: Install PHP Packages
       yum: pkg={{ php5.packages }} state=latest
       when: php.packages is defined
+
 composer:
   handlers:
   tasks:
     - name: Install Composer
       shell: curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/bin --filename=composer creates=/usr/composer state=absent
+
 mariadb:
   handlers:
   tasks:
@@ -89,6 +91,7 @@ mariadb:
         - 127.0.0.1
         - ::1
         - localhost
+
 mysql:
   handlers:
   tasks:
@@ -153,6 +156,7 @@ nginx:
         state: present
     - name: Start up nginx
       raw: systemctl enable nginx
+
 apache:
   handlers:
     - name: restart httpd
@@ -179,19 +183,21 @@ node:
       yum:
         name: nodejs
         state: latest
-firewalld:
-  handlers:
-  tasks:
-    - name: Activate Firewalld
-      raw: systemctl start firewalld
-    - name: Startup Firewalld
-      raw: systemctl enable firewalld
-    - name: Open HTTP
-      raw: firewall-cmd --permanent --add-service=http --zone=public
-    - name: Open Https
-      raw: firewall-cmd --permanent --add-service=https --zone=public
-    - name: Open Https
-      raw: firewall-cmd --reload
+  
+# firewalld:
+#   handlers:
+#   tasks:
+#     - name: Activate Firewalld
+#       raw: systemctl start firewalld
+#     - name: Startup Firewalld
+#       raw: systemctl enable firewalld
+#     - name: Open HTTP
+#       raw: firewall-cmd --permanent --add-service=http --zone=public
+#     - name: Open Https
+#       raw: firewall-cmd --permanent --add-service=https --zone=public
+#     - name: Open Https
+#       raw: firewall-cmd --reload
+
 wordpress:
   rules:
     - commons

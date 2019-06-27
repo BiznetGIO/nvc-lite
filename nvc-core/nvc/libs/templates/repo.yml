@@ -26,7 +26,7 @@ nvc:
 
   centos:
     url: "https://github.com/ami-project/ami-playbook.git"
-    description: "Template that installs NVC Lite ubuntu."
+    description: "Template that installs NVC Lite centos."
     parameters:
       roles:
         type: array

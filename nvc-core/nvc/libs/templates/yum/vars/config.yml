@@ -147,7 +147,7 @@ vars:
         project_path:
           type: string
           label: Install Priority
-          default: '/home/ubuntu/flask_app'
+          default: '/home/$USER/flask_app'
     apache:
       parameters:
         install:
