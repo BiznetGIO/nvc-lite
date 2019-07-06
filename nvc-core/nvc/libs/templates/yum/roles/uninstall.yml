@@ -1,0 +1,170 @@
+php:
+  handlers:
+  tasks:
+    - name: Removing PHP Packages
+      yum:
+        name: "{{ php.packages }}"
+        state: absent
+php5:
+  handlers:
+  tasks:
+    - name: Removing PHP 5 Packages
+      yum: 
+        name: "{{ php5.packages }}"
+        state: latest
+
+composer:
+  handlers:
+  tasks:
+    - name: Remove Composer
+      file:
+        state: absent
+        path: "/usr/bin/composer"
+
+mariadb:
+  handlers:
+  tasks:
+    - name: uninstall Mariadb
+      yum:
+        name: mariadb-server
+        state: absent
+
+mysql:
+  handlers:
+  tasks:
+    - name: Uninstall MySQl
+      yum: 
+        name: "{{ mysql.packages }}"
+        state: latest
+  
+nginx:
+  handlers:
+  tasks:
+    - name: Install Nginx
+      yum:
+        name: nginx
+        state: absent
+
+apache:
+  handlers:
+    - name: restart httpd
+      service:
+        name: httpd
+        state: restarted
+    - name: reload httpd
+      service:
+        name: httpd
+        state: reloaded
+  tasks:
+    - name: Install Httpd
+      package:
+        name: apache2
+        state: present
+        force: yes
+        update_cache: yes
+node:
+  handlers:
+  tasks:
+    - name: Uninstall Node
+      yum:
+        name: nodejs
+        state: absent
+
+wordpress:
+  rules:
+  handlers:
+  tasks:
+    - name: Removing All Value Root Dir
+      shell: rm -rf * state=absent
+      args:
+        chdir: /var/www/html
+joomla:
+  handlers:
+  tasks:
+flask:
+  handlers:
+  tasks:
+    - name: Creates directory Flask
+      shell: mkdir {{ flask.project_path }}
+    - name: Install Virtualenv
+      package:
+        name: virtualenv
+        state: present
+        force: yes
+        update_cache: yes
+    - name: Setup Environment
+      shell: virtualenv -p python3 env
+      args:
+        chdir: "{{ flask.project_path }}"
+    - name: Installing Flask
+      shell: env/bin/pip install flask
+      args:
+        chdir: "{{ flask.project_path }}"
+drupal:
+  rules:
+  handlers:
+  tasks:
+    - name: Removing All Value Root Dir
+      shell: rm -rf * state=absent
+      args:
+        chdir: /var/www/html
+magento:
+  handlers:
+  tasks:
+    - name: Removing Magento
+      shell: rm -rf * state=absent
+      args:
+        chdir: "{{ nginx.docroot }}"
+gitlab:
+  handlers:
+  tasks:
+    - name: Install Postfix
+      yum:
+        name: gitlab-ce
+        state: absent
+zabbix:
+  handlers:
+  tasks:
+    - name: Install zabbix
+      yum:
+        name: "{{ packages }}"
+      vars:
+        packages:
+        - zabbix-get
+        - httpd-tools
+        - zabbix-server-mysql
+        - zabbix-web-mysql
+        - zabbix-agent
+      state: absent
+grafana:
+  handlers:
+  tasks:
+
+mongodb:
+  handlers:
+  tasks:
+    - name: Install mongodb
+      yum:
+        name: mongodb-org
+        state: absent
+
+cockroachdb:
+  handlers:
+  tasks:
+    - name: Removing All Value Root Dir
+      shell: rm -rf * cockroach
+      args:
+        chdir: /usr/bin
+mean:
+  handlers:
+  tasks:
+    - name: remove mean
+      shell: rm -rf *
+      args:
+        chdir: /var/www
+timesqldb:
+  handlers:
+  tasks:
+redmine:
+  handlers:
+  tasks:

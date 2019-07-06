@@ -10,6 +10,7 @@ include nvc/libs/templates/config.yml
 include nvc/libs/templates/apt/roles/item.yml
 include nvc/libs/templates/apt/vars/config.yml
 include nvc/libs/templates/yum/roles/item.yml
+include nvc/libs/templates/yum/roles/uninstall.yml
 include nvc/libs/templates/yum/vars/config.yml
 prune .cache
 prune .git

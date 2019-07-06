@@ -12,7 +12,8 @@ class Playbook(Base):
         usage:
         playbook configure [-f FILE]
         playbook start [-f FILE]
-        playbook create [-p PACKGE] [-a APPS]
+        playbook create [-p PACKAGE] [-a APPS]
+        playbook remove [- FILE]
 
         Run nvc playbook [command] [option]
 
@@ -32,7 +33,7 @@ class Playbook(Base):
             data_playbook = playbook_lib.playbook_create(pkg, apps)
             utils.yaml_writeln(data_playbook, app_dir+"/nvc.yml")
             exit()
-        
+
         if self.args['configure']:
             path = None
             if self.args['--file']:
@@ -58,7 +59,7 @@ class Playbook(Base):
             else:
                 utils.log_rep("Playbook Configured")
             exit()
-        
+
         if self.args['start']:
             path = None
             if self.args['--file']:
@@ -77,4 +78,18 @@ class Playbook(Base):
                         package in nvc.yml")
             else:
                 utils.log_rep("Package Finished Setup")
+            exit()
+
+        if self.args['remove']:
+            path = None
+            if self.args['--file']:
+                nvc_file = self.args['--file']
+            else:
+                nvc_file = "nvc.yml"
+            obj_nvc = utils.yaml_read(nvc_file)
+            for nvc_list in obj_nvc:
+                for i in obj_nvc[nvc_list]['roles']:
+                    if i != 'commons':
+                        # call remove app builder
+                        print("call remove app builder")
             exit()

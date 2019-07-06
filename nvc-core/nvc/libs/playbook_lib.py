@@ -62,6 +62,10 @@ def playbook_create(pkg, apps=None):
     return finish_data
 
 
+def uninstalling_package(data):
+    pass
+
+
 def playbook_remove(path):
     try:
         utils.rm_dir(path)
@@ -69,5 +73,3 @@ def playbook_remove(path):
         utils.log_err(e)
     else:
         return True
-
-

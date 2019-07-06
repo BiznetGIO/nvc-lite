@@ -1,62 +1,132 @@
 from neo.libs import utils, vm, network
+from neo.libs import orchestration as orch
 from glanceclient import Client as image_client
+from app.helpers.rest import response
+from app.helpers.session import get_session
+import os
 
-def get_image_client(session):
-    img = image_client('2', session=session)
-    return img
+nvc_images = os.environ.get("NVC_IMAGE_ID", os.getenv("NVC_IMAGE_ID"))
 
-
-def get_list(session):
-    img = get_image_client(session)
-    img_list = list()
+def get_nvc(headers):
+    obj_data = []
     try:
-        img_list = img.images.list()
-    except Exception:
-        return None
-    return img_list
+        session_data = get_session(headers)
+        list_vm = vm.get_list(session=session_data)
+    except Exception as e:
+        return response(401, message=str(e))
+    else:
+        for i in list_vm:
+            power_state = getattr(i, 'OS-EXT-STS:power_state')
+            for network_name, network in i.networks.items():
+                data = {
+                    'id': i.id,
+                    'name': i.name,
+                    'status': i.status,
+                    'image': i.image,
+                    'network': network_name,
+                    'ip': network,
+                    'key_name': i.key_name,
+                    'flavor': i.flavor,
+                    'power_state': power_state
 
-
-class neoApi():
-    def neo_get_stack():
-        list_stack = utils.get_index(utils.repodata())
-        return list_stack
-
-    def neo_get_project(templates):
-        list_project = utils.get_index(utils.repodata()[templates])
-        return list_project
-
-    def neo_get_image(session):
-        images = get_list(session)
-        data = []
-        for i in images:
-            obj = {
-                'id': i['id'],
-                'name': i['name'],
-                'status': i['status']
+                }
+                obj_data.append(data)
+    obj_vm = list()
+    obj_stack = list()
+    try:
+        stack = orch.get_list(session=session_data)
+    except Exception as e:
+        return response(401, message=str(e))
+    else:
+        for stack_list in stack:
+            data_stack = {
+                'id': stack_list[0],
+                'name': stack_list[1],
+                'status': stack_list[2],
+                'created': stack_list[3],
+                'update': stack_list[4]
             }
-            data.append(obj)
-        return data
+            obj_stack.append(data_stack)
+        
+        for vm_list in obj_data:
+            if vm_list['image']['id'] == nvc_images:
+                for stack_row in obj_stack:
+                    if vm_list['name'] == stack_row['name']:
+                        obj_vm.append({
+                            "id": vm_list['id'],
+                            "stack_id": stack_row['id'],
+                            "stack_name": stack_row['name'],
+                            "name": vm_list['name'],
+                            "status": vm_list['status'],
+                            "image": nvc_images,
+                            "network": vm_list['network'],
+                            "ip": vm_list['ip'],
+                            "key_name": vm_list['key_name'],
+                            "power_state": vm_list['power_state'],
+                            "stack_status": stack_row['status']
+                        })
+        return obj_vm
 
-    def neo_get_flavour(session):
-        flavor = [{attr:value for attr,value in flav.__dict__.items()} for flav in vm.get_flavor(session)]
-        data = []
-        for i in flavor:
-            obj = {
-                'id': i['id'],
-                'name': i['name'],
-                'ram': i['ram'],
-                'cpu': i['vcpus'],
-                'disk': i['disk']
+def get_nvc_by_stack_id(headers, stack_id):
+    obj_data = []
+    try:
+        session_data = get_session(headers)
+        list_vm = vm.get_list(session=session_data)
+    except Exception as e:
+        return response(401, message=str(e))
+    else:
+        for i in list_vm:
+            power_state = getattr(i, 'OS-EXT-STS:power_state')
+            for network_name, network in i.networks.items():
+                data = {
+                    'id': i.id,
+                    'name': i.name,
+                    'status': i.status,
+                    'image': i.image,
+                    'network': network_name,
+                    'ip': network,
+                    'key_name': i.key_name,
+                    'flavor': i.flavor,
+                    'power_state': power_state
+
+                }
+                obj_data.append(data)
+    obj_vm = list()
+    obj_stack = list()
+    try:
+        stack = orch.get_list(session=session_data)
+    except Exception as e:
+        return response(401, message=str(e))
+    else:
+        for stack_list in stack:
+            data_stack = {
+                'id': stack_list[0],
+                'name': stack_list[1],
+                'status': stack_list[2],
+                'created': stack_list[3],
+                'update': stack_list[4]
             }
-            data.append(obj)
-        return data
-
-    def neo_get_key(session):
-        list_key = vm.get_keypairs(session)
-        return list_key
-
-    def neo_get_network(session):
-        return [
-            net['name'] for net in network.get_list(session)
-            if net['name'] != 'Public_Network'
-        ]
+            obj_stack.append(data_stack)
+        
+        for vm_list in obj_data:
+            if vm_list['image']['id'] == nvc_images:
+                for stack_row in obj_stack:
+                    if vm_list['name'] == stack_row['name']:
+                        obj_vm.append({
+                            "id": vm_list['id'],
+                            "stack_id": stack_row['id'],
+                            "stack_name": stack_row['name'],
+                            "name": vm_list['name'],
+                            "status": vm_list['status'],
+                            "image": nvc_images,
+                            "network": vm_list['network'],
+                            "ip": vm_list['ip'],
+                            "key_name": vm_list['key_name'],
+                            "power_state": vm_list['power_state'],
+                            "stack_status": stack_row['status']
+                        })
+        obj_vm_result = list()
+        for vm_row in obj_vm:
+            if stack_id == vm_row['stack_id']:
+                obj_vm_result.append(vm_row)
+        return obj_vm_result
