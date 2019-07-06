@@ -1,0 +1,462 @@
+php:
+  handlers:
+  tasks:
+    - name: Removing PHP Packages
+      yum:
+        name: "{{ php.packages }}"
+        state: absent
+php5:
+  handlers:
+  tasks:
+    - name: Removing PHP 5 Packages
+      yum: 
+        name: "{{ php5.packages }}"
+        state: latest
+
+composer:
+  handlers:
+  tasks:
+    - name: Remove Composer
+      file:
+        state: absent
+        path: "/usr/bin/composer"
+
+mariadb:
+  handlers:
+  tasks:
+    - name: Install Mariadb
+      yum:
+        name: mariadb-server
+        state: present
+    - name: start mysql server and enable it on reboot
+      service: name=mariadb state=started enabled=true
+    - name: update mysql root password for all root accounts
+      mysql_user:
+        name: root
+        host: "{{ item }}"
+        password: "{{ mariadb.password }}"
+        login_user: root
+        login_password: ""
+        check_implicit_admin: yes
+        priv: "*.*:ALL,GRANT"
+      with_items:
+        - 127.0.0.1
+        - ::1
+        - localhost
+
+mysql:
+  handlers:
+  tasks:
+    - shell: hostname
+      register: current_hostname
+    - name: mysql | Install MySQL Packages
+      yum: pkg={{ mysql.packages }} state=latest
+    - name: mysql | Update root password for all root accounts
+      mysql_user: name=root host={{ item }} check_implicit_admin=yes password={{ mysql.root_password }} login_user=root login_password={{ mysql.root_password }}
+      with_items:
+        - "{{ inventory_hostname }}"
+        - 127.0.0.1
+        - ::1
+        - localhost
+      when: inventory_hostname != 'localhost'
+    - name: mysql | Create Databases
+      mysql_db: name={{ mysql.database }} state=present login_user=root login_password={{ mysql.root_password }}
+    - name: mysql | Import dump
+      mysql_db: name={{ mysql.database }} state=import login_user=root login_pasword={{ mysql.root_password }} target=/wwww/{{ mysql.dump }}
+      when: mysql.dump
+    - name: mysql | Ensure anonymous users are not in the database
+      mysql_user: name='' host={{ item }} state=absent login_user=root login_password={{ mysql.root_password }}
+      with_items:
+        - localhost
+nginx:
+  handlers:
+    - name: restart nginx
+      service:
+        name: nginx
+        state: restarted
+    - name: reload nginx
+      service:
+        name: nginx
+        state: reloaded
+  tasks:
+    - name: Install Nginx
+      yum:
+        name: nginx
+        state: present
+        update_cache: yes
+    - name: Add  Nginx.Conf
+      template: src=nginx.yum.j2 dest=/etc/nginx/nginx.conf
+    - name: Add  Config
+      copy: src=h5bp dest=/etc/nginx owner=root group=root
+    - name: Symlink default site
+      template: src=default.yum.j2 dest=/etc/nginx/conf.d/main.conf
+    - name: Creates directory
+      file:
+        path: /etc/nginx/modules
+        state: directory
+    - name: Set Nginx PID
+      lineinfile:
+        dest: /etc/nginx/nginx.conf
+        regexp: "^pid"
+        line: "pid /run/nginx.pid;"
+        state: present
+    - name: Set Nginx user
+      lineinfile:
+        dest: /etc/nginx/nginx.conf
+        regexp: "^user"
+        line: "user nginx;"
+        state: present
+    - name: Start up nginx
+      raw: systemctl enable nginx
+
+apache:
+  handlers:
+    - name: restart httpd
+      service:
+        name: httpd
+        state: restarted
+    - name: reload httpd
+      service:
+        name: httpd
+        state: reloaded
+  tasks:
+    - name: Install Httpd
+      package:
+        name: apache2
+        state: present
+        force: yes
+        update_cache: yes
+node:
+  handlers:
+  tasks:
+    - name: Add Node source package
+      raw: curl -sL https://rpm.nodesource.com/setup_10.x | bash -
+    - name: Install Node
+      yum:
+        name: nodejs
+        state: latest
+  
+# firewalld:
+#   handlers:
+#   tasks:
+#     - name: Activate Firewalld
+#       raw: systemctl start firewalld
+#     - name: Startup Firewalld
+#       raw: systemctl enable firewalld
+#     - name: Open HTTP
+#       raw: firewall-cmd --permanent --add-service=http --zone=public
+#     - name: Open Https
+#       raw: firewall-cmd --permanent --add-service=https --zone=public
+#     - name: Open Https
+#       raw: firewall-cmd --reload
+
+wordpress:
+  rules:
+    - commons
+    - mariadb
+    - php
+    - nginx
+    - wordpress
+  handlers:
+  tasks:
+    - mysql_user:
+        name: "{{ wordpress.username }}"
+        password: "{{ wordpress.password }}"
+        priv: "*.*:ALL"
+        login_user: "root"
+        login_password: "{{ mariadb.password }}"
+        host: localhost
+        state: present
+    - mysql_db:
+        name: "{{ wordpress.db_name }}"
+        state: present
+        login_user: "{{ wordpress.username }}"
+        login_password: "{{ wordpress.password }}"
+    - name: Install WP-CLI
+      get_url:
+        url: https://raw.githubusercontent.com/wp-cli/builds/gh-pages/phar/wp-cli.phar
+        dest: /usr/bin/wp
+        mode: 0755
+    - name: Removing All Value Root Dir
+      shell: rm -rf * state=absent
+      args:
+        chdir: /var/www/html
+    - name: Downloading Core
+      shell: wp core download --allow-root
+      args:
+        chdir: /var/www/html
+    - name: Configuring Core
+      shell: wp core config --dbname="{{ wordpress.db_name }}" --dbuser="{{ wordpress.username }}" --dbpass="{{ wordpress.password }}" --dbhost=localhost --dbprefix=wp_ --allow-root
+      args:
+        chdir: /var/www/html
+    - name: Installing Core
+      shell: wp core install --url="{{ wordpress.wp_url }}" --title="{{wordpress.title}} | NVC LITE WORDPRESS" --admin_user="{{ wordpress.username }}" --admin_password="{{ wordpress.password }}" --admin_email="{{ wordpress.email }}" --allow-root
+      args:
+        chdir: /var/www/html
+    - name: Symlink default site
+      template: src=default.yum.j2 dest=/etc/nginx/conf.d/main.conf
+    - name: Change Themes
+      shell: wp theme activate twentyseventeen --allow-root
+      args:
+        chdir: /var/www/html
+    - name: Symlink wp-config.php
+      template: src=wp-config.php.j2 dest=/var/www/html/wp-config.php
+joomla:
+  handlers:
+  tasks:
+flask:
+  handlers:
+  tasks:
+    - name: Creates directory Flask
+      shell: mkdir {{ flask.project_path }}
+    - name: Install Virtualenv
+      package:
+        name: virtualenv
+        state: present
+        force: yes
+        update_cache: yes
+    - name: Setup Environment
+      shell: virtualenv -p python3 env
+      args:
+        chdir: "{{ flask.project_path }}"
+    - name: Installing Flask
+      shell: env/bin/pip install flask
+      args:
+        chdir: "{{ flask.project_path }}"
+drupal:
+  rules:
+    - commons
+    - mariadb
+    - nginx
+    - php
+    - composer
+    - drupal
+  handlers:
+  tasks:
+    - name: clone Drush repository
+      git:
+        repo: https://github.com/drush-ops/drush.git
+        version: "9.3.0"
+        dest: /opt/drush
+    - name: install Drush dependencies with Composer
+      shell: composer install
+      args:
+        chdir: "/opt/drush"
+    - name: clone Drupal repository
+      git:
+        repo: http://git.drupal.org/project/drupal.git
+        version: "{{ drupal.version }}"
+        dest: "{{ drupal.root_dir }}"
+    - mysql_user:
+        name: "{{ drupal.username }}"
+        password: "{{ drupal.password }}"
+        priv: "*.*:ALL"
+        login_user: "root"
+        login_password: "{{ mariadb.password }}"
+        host: localhost
+        state: present
+    - mysql_db:
+        name: "{{ drupal.db_name }}"
+        state: present
+        login_user: "{{ drupal.username }}"
+        login_password: "{{ drupal.password }}"
+    - name: install Drupal dependencies with Composer
+      shell: composer install
+      args:
+        chdir: "{{ drupal.root_dir }}"
+        creates: "{{ drupal.root_dir }}/vendor/autoload.php"
+    - name: install Drupal
+      shell: /opt/drush/drush si -y --site-name="NVC LITE" --account-name={{ drupal.username }} --account-pass="{{ drupal.password }}" --db-url=mysql://{{ drupal.username }}:{{ drupal.password }}@localhost/{{ drupal.db_name }}
+      args:
+        chdir: "{{ drupal.root_dir }}"
+    - name: set permissions on the settings file
+      file:
+        path: "{{ drupal.root_dir }}/sites/default/settings.php"
+        mode: 0744
+    - name: set permissions on files direcotry
+      file:
+        path: "{{ drupal.root_dir }}/sites/default/files"
+        mode: 0777
+        state: directory
+        recurse: yes
+magento:
+  handlers:
+  tasks:
+    - mysql_user:
+        name: "{{ magento.username }}"
+        password: "{{ magento.password }}"
+        priv: "*.*:ALL"
+        login_user: "root"
+        login_password: "{{ mariadb.password }}"
+        host: localhost
+        state: present
+    - mysql_db:
+        name: "{{ magento.db_name }}"
+        state: present
+        login_user: "{{ magento.username }}"
+        login_password: "{{ magento.password }}"
+    - name: Download Magento
+      shell: composer create-project --repository=https://repo.magento.com/magento/project-community-edition .
+      args:
+        chdir: "{{ nginx.docroot }}"
+    - name: Permission On magento
+      shell: chwon -R :nginx .
+      args:
+        chdir: "{{ nginx.docroot }}"
+    - name: Permission public F
+      shell: find var generated vendor pub/static pub/media app/etc -type f -exec chmod g+w {} +
+      args:
+        chdir: "{{ nginx.docroot }}"
+    - name: Permission public D
+      shell: find var generated vendor pub/static pub/media app/etc -type d -exec chmod g+ws {} +
+      args:
+        chdir: "{{ nginx.docroot }}"
+    - name: Permission magento execute
+      shell: chmod u+x bin/magento
+      args:
+        chdir: "{{ nginx.docroot }}"
+    - name: Installing And Setup Magento
+      shell: bin/magento setup:install --base-url=http://{{ magento.site_url }} --db-host=localhost --db-name={{ magento.db_name }} --db-user={{ magento.username }} --db-password={{ magento.password }} --backend-frontname=admin --admin-firstname={{ magento.username }} --admin-lastname={{ magento.username }} --admin-email={{ magento.email }} --admin-user={{ magento.username }} --admin-password={{ magento.password }} --language=en_US --currency={{ magento.currency }} --timezone=Asia/Jakarta --use-rewrites=1
+      args:
+        chdir: "{{ nginx.docroot }}/bin/magento"
+    - name: Symlink default site
+      template: src=default.yum.j2 dest=/etc/nginx/conf.d/main.conf
+gitlab:
+  handlers:
+    - name: restart Postfix
+      systemd:
+        name: postfix
+        state: started
+        enabled: yes
+  tasks:
+    - name: Install Postfix
+      yum:
+        name: postfix
+        state: present
+    - name: Add Gitlab source package
+      raw: curl -sS https://packages.gitlab.com/install/repositories/gitlab/gitlab-ce/script.rpm.sh | sudo bash
+    - name: Add Gitlab source package
+      raw: EXTERNAL_URL="{{ gitlab.site_url }}" yum install -y gitlab-ce
+zabbix:
+  handlers:
+  tasks:
+    - mysql_user:
+        name: "{{ zabbix.username }}"
+        password: "{{ zabbix.password }}"
+        priv: "*.*:ALL"
+        login_user: "root"
+        login_password: "{{ mariadb.password }}"
+        host: localhost
+        state: present
+    - mysql_db:
+        name: "{{ zabbix.db_name }}"
+        state: present
+        login_user: "{{ zabbix.username }}"
+        login_password: "{{ zabbix.password }}"
+    - name: Add zabbix source package
+      yum:
+        name: http://repo.zabbix.com/zabbix/3.4/rhel/7/x86_64/zabbix-release-3.4-1.el7.centos.noarch.rpm
+        state: present
+    - name: Install zabbix
+      yum:
+        name: "{{ packages }}"
+      vars:
+        packages:
+        - zabbix-get
+        - httpd-tools
+        - zabbix-server-mysql
+        - zabbix-web-mysql
+        - zabbix-agent
+    - name: Unzip Zabbix Database
+      shell: gunzip create.sql.gz
+      args:
+        chdir: /usr/share/doc/zabbix-server-mysql-3.4.6
+    - name: Import Zabbix Database
+      mysql_db:
+        state: import
+        name: all
+        target: /usr/share/doc/zabbix-server-mysql-3.4.6/create.sql
+        login_user: "{{ zabbix.username }}"
+        login_password: "{{ zabbix.password }}"
+    - name: Symlink Zabbix Config
+      template: src=zabbix.j2 dest=/etc/zabbix/zabbix_server.conf
+    - name: Started Zabbix
+      systemd:
+        name: zabbix-server
+        state: started
+        enabled: yes
+grafana:
+  handlers:
+  tasks:
+mongodb:
+  handlers:
+  tasks:
+    - name: Symlink Repo Mongo
+      template: src=repo.yum.j2 dest=/etc/yum.repos.d/mongodb.repo
+    - name: Install mongodb
+      yum:
+        name: mongodb-org
+        state: latest
+    - name: Started Mongodb
+      systemd:
+        name: mongod
+        state: started
+        enabled: yes
+cockroachdb:
+  handlers:
+  tasks:
+    - name: Add User Cockroachdb
+      shell: useradd cockroach state=absent
+    - name: Creates directory Cockroach
+      file:
+        path: /var/lib/cockroach
+        state: directory
+    - name: Change Owner cockroach dir
+      shell: chown cockroach /var/lib/cockroach state=absent
+    - name: Symlink Cockroach service
+      template: src=cockroach.service.j2 dest=/etc/systemd/system/cockroach.service
+    - name: Download Cockroachdb
+      shell: wget -qO- https://binaries.cockroachdb.com/cockroach-v19.1.0.linux-amd64.tgz | tar  xvz state=absent
+      args:
+        chdir: /tmp/
+    - name: Copying Bin
+      shell: cp -i cockroach-v19.1.0.linux-amd64/cockroach /usr/bin state=absent
+      args:
+        chdir: /tmp/
+    - name: Reloading Daemon
+      systemd:
+        daemon_reload: yes
+    - name: Started Cockroachdb And Enable Auto Startup
+      systemd:
+        name: cockroach
+        state: started
+        enabled: yes
+mean:
+  handlers:
+  tasks:
+    - name: Install Mean Stack Extra Packages
+      yum:
+        name: "{{ mean.packages }}"
+        state: present
+    - name: Install Saas
+      raw: gem install saas
+    - name: Install Bower
+      raw: npm install -g bower
+    - name: Install Gulp
+      raw: npm install -g gulp
+    - git:
+        repo: https://github.com/meanjs/mean.git
+        dest: /var/www/mean
+    - name: Install packages mean boilerplate.
+      npm:
+        path: /var/www/mean
+    - name: Starting mean stack
+      shell: npm start
+      args:
+        chdir: /var/www
+timesqldb:
+  handlers:
+  tasks:
+redmine:
+  handlers:
+  tasks:
