@@ -112,6 +112,7 @@ app/static/instances/*
 app/static/networks/*
 app/static/others/*
 app/static/databases/*
+app/static/keys/*
 
 # PRODUCTION | GUNICORN
 deploy/*

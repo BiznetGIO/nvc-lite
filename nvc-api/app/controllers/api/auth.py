@@ -2,12 +2,13 @@ from flask_restful import Resource, reqparse
 from flask import request, jsonify
 from app.helpers.rest import *
 from app.helpers.session import *
-from app import redis_store
+from app import redis_store, root_dir
 from neo.libs import login
 from keystoneauth1 import session
 from keystoneauth1.identity import v3
 from app.middlewares import auth
-from app.libs import utils
+from app.libs import utils, login_utils
+from app.models import model
 import os
 import dill
 import hashlib
@@ -36,6 +37,7 @@ class LoginNow(Resource):
             access_token = hashlib.sha256(raw_token.encode(
                 'utf-8')).hexdigest()
             now = arrow.now()
+            
             project_id = login.get_project_id(username, password, keystone_url, openstack_domain)
             sess = login.generate_session(
                 auth_url=keystone_url,
@@ -44,12 +46,28 @@ class LoginNow(Resource):
                 user_domain_name= openstack_domain,
                 project_id=project_id)
             user_id = sess.get_user_id()
+            check_user = login_utils.check_user_id(user_id)
+            if not check_user:
+                data_user = {
+                    "project_id": project_id,
+                    "user_id_openstack": user_id,
+                    "username": username
+                }
+                try:
+                    model.insert("tb_user", data_user)
+                    
+                except Exception as e:
+                    return response(401, message=str(e))
             stored_data = {
                 'user_id':user_id,
                 'timestamp': now,
                 'session': sess,
                 'project_id': project_id
             }
+
+            if not utils.check_folder(root_dir+"/static/keys/"+project_id):
+                utils.create_folder(root_dir+"/static/keys/"+project_id)
+            
             dill_object = dill.dumps(stored_data)
             redis_store.set(access_token, dill_object)
             redis_store.expire(access_token, 3600)

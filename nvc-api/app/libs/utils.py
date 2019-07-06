@@ -47,13 +47,59 @@ def log_info(stdin):
     coloredlogs.install()
     logging.info(stdin)
 
-
 def log_warn(stdin):
     coloredlogs.install()
     logging.warn(stdin)
-
 
 def log_err(stdin):
     coloredlogs.install()
     logging.error(stdin)
 
+def read_file(file):
+    if os.path.isfile(file):
+        return True
+    else:
+        return False
+
+def create_file(file, path, value=None):
+    if path:
+        default_path = str(path)
+    f = open(default_path+"/"+file, "a+")
+    f.write(value)
+    f.close()
+    try:
+        return read_file(default_path+"/"+file)
+    except Exception as e:
+        log_err(e)
+
+def rm_dir(path):
+    try:
+        return shutil.rmtree(path)
+    except Exception as e:
+        log_err(e)
+
+def copy(src, dest):
+    try:
+        shutil.copytree(src, dest)
+    except OSError as e:
+        log_err(e)
+
+
+def check_folder(path):
+    try:
+        return os.path.isdir(path)
+    except Exception as e:
+        log_err(e)
+
+def copyfile(src, dest):
+    try:
+        shutil.copyfile(src, dest)
+    except OSError as e:
+        log_err(e)
+
+def create_folder(path):
+    try:
+        return os.makedirs(path)
+    except Exception as e:
+        log_err(e)
+    
