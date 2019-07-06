@@ -69,20 +69,6 @@ node:
       yum:
         name: nodejs
         state: absent
-  
-# firewalld:
-#   handlers:
-#   tasks:
-#     - name: Activate Firewalld
-#       raw: systemctl start firewalld
-#     - name: Startup Firewalld
-#       raw: systemctl enable firewalld
-#     - name: Open HTTP
-#       raw: firewall-cmd --permanent --add-service=http --zone=public
-#     - name: Open Https
-#       raw: firewall-cmd --permanent --add-service=https --zone=public
-#     - name: Open Https
-#       raw: firewall-cmd --reload
 
 wordpress:
   rules:
