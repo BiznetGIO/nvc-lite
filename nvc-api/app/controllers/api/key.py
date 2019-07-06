@@ -2,7 +2,6 @@ from flask_restful import Resource, reqparse, request
 from app.helpers.rest import *
 from app.middlewares import auth
 from app.helpers.session import *
-from app.libs.neo import neoApi
 from neo.libs import orchestration as orch
 from app import root_dir, redis_store
 from app.libs import utils
