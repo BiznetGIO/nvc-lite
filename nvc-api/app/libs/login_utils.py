@@ -2,6 +2,7 @@ from keystoneauth1.identity import v3
 from keystoneauth1 import session
 from keystoneclient.v3 import client
 from keystoneclient.v3 import users
+from app.models import model
 
 
 def generate_session(username, password,
@@ -29,3 +30,13 @@ def get_project_id(sess):
     ]
 
     return project_list[0]
+
+def check_user_id(user_id):
+    try:
+        data_user = model.get_by_id("tb_user", "user_id_openstack", user_id)[0]
+    except Exception as e:
+        return False
+    else:
+        return True
+    
+    

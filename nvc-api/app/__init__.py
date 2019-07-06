@@ -8,9 +8,6 @@ import psycopg2
 
 redis_store = FlaskRedis()
 root_dir = os.path.dirname(os.path.abspath(__file__))
-cache = MemcachedCache(['{}:{}'.format(
-    os.environ.get("MEMCACHE_HOST", os.getenv('MEMCACHE_HOST')),
-    os.environ.get("MEMCACHE_PORT", os.getenv('MEMCACHE_PORT')))])
 
 conn = psycopg2.connect(
     database=os.environ.get("DB_NAME", os.getenv('DB_NAME')),
