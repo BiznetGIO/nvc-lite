@@ -86,9 +86,11 @@ class PlaybookPing(Resource):
         project_id = args['project_id']
         stack_id = args['stack_id']
         username = args['username']
-
+        redis_data = utils.get_redis(request.headers['Access-Token'])
+        nvc_images = utils.parse_nvc_images(redis_data['region'])
+        nvc_images = nvc_images[redis_data['region']]
         path_key = root_dir+"/static/keys/"+project_id+"/"+stack_id+"/vm.pem"
-        vm_remotes = neo.get_nvc_by_stack_id(token, stack_id)
+        vm_remotes = neo.get_nvc_by_stack_id(token, stack_id, nvc_images)
         public_ip_vm = vm_remotes[0]['ip'][1]
         try:
             ssh = ssh_utils.ssh_connect(public_ip_vm, username, path_key)
