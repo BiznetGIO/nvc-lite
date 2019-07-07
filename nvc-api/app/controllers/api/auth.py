@@ -62,6 +62,7 @@ class LoginNow(Resource):
                 'user_id':user_id,
                 'timestamp': now,
                 'session': sess,
+                "region": region,
                 'project_id': project_id
             }
 
