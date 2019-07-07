@@ -3,9 +3,9 @@ from app.helpers.rest import *
 from app.middlewares import auth
 from app.helpers.session import *
 from neo.libs import orchestration as orch
-from app import root_dir, redis_store
+from app import root_dir
 from app.libs import utils
-import dill, os
+import os
 
 
 class GetPemKey(Resource):
@@ -13,8 +13,7 @@ class GetPemKey(Resource):
     def get(self, stack_id):
         private_key = None
         static_dir = root_dir+"/static"
-        redis_dill = redis_store.get(request.headers['Access-Token'])
-        redis_data = dill.loads(redis_dill)
+        redis_data = utils.get_redis(request.headers['Access-Token'])
         project_id = redis_data['project_id']
         try:
             private_key = orch.get_pkey_from_stack(stack_id, 
