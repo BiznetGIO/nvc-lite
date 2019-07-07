@@ -12,6 +12,7 @@ from app.models import model
 class PlaybookStart(Resource):
     @auth.login_required
     def post(self):
+        result = []
         token = request.headers['Access-Token']
         json_data = request.get_json(force=True)
         project_id = json_data['project_id']
@@ -41,7 +42,9 @@ class PlaybookStart(Resource):
             except Exception as e:
                 return response(401, message="Server Not Connected | "+str(e))
             try:
-                a = ssh_utils.exec_command(ssh, "ls /tmp/"+app_stack)
+                command_build = 'cd /tmp/'+app_stack+'; nvc playbook configure; sudo nvc playbook start'
+                res = ssh_utils.exec_command_n_decode(ssh, command_build)
+                result = ssh_utils.line_buffered(res)
             except Exception as e:
                 return response(401, message="Server Not Connected | "+str(e))
             else:
@@ -63,7 +66,7 @@ class PlaybookStart(Resource):
                     return response(401, message=str(e))
 
             ssh.close()
-            return response(200, data=a, message="Remote Success")
+            return response(200, data=result, message="Remote Success")
 
 
 class PlaybookRemove(Resource):
@@ -97,6 +100,6 @@ class PlaybookPing(Resource):
         except Exception as e:
             return response(401, message="Server Not Connected | "+str(e))
         else:
-            ping_status = ssh_utils.exec_command(ssh, "nvc playbook -u "+username)
+            ping_status = ssh_utils.exec_command(ssh, "nvc playbook ping -u "+username)
             ssh.close() 
             return response(200, data= str(ping_status), message="Server Connected")

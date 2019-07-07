@@ -23,6 +23,10 @@ def exec_command(ssh_object, command):
     result = stdout.read().decode("utf8")
     return result
 
+def exec_command_n_decode(ssh_object, command):
+    _,stdout,_ = ssh_object.exec_command(str(command))
+    return stdout
+
 def sync_file(ftp_client, path_file, path_remote):
     # Seharusnya ada return calback status
     try:
@@ -31,3 +35,14 @@ def sync_file(ftp_client, path_file, path_remote):
         utils.log_err(e)
     else:
         ftp_client.close()
+
+
+def line_buffered(f):
+    line_buf = []
+    while not f.channel.exit_status_ready():
+        data = f.read().decode('utf-8')
+        data = data.split("\n")
+        for i in data:
+            if i != '':
+                line_buf.append(i)
+    return line_buf
