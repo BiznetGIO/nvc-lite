@@ -13,7 +13,8 @@ class Playbook(Base):
         playbook configure [-f FILE]
         playbook start [-f FILE]
         playbook create [-p PACKAGE] [-a APPS]
-        playbook remove [- FILE]
+        playbook remove [-f FILE]
+        playbook ping [-u USERNAME]
 
         Run nvc playbook [command] [option]
 
@@ -22,6 +23,7 @@ class Playbook(Base):
         -p package --package=PACKAGE                               Package
         -a apps --apps=APPS                                        Application
         -i inventory --inventory=INVENTORY                         Inventory
+        -u username --username=USERNAME                           Ping
         -h --help                                                  Print usage
     """
     def execute(self):
@@ -92,4 +94,13 @@ class Playbook(Base):
                     if i != 'commons':
                         # call remove app builder
                         print("call remove app builder")
+            exit()
+
+        if self.args['ping']:
+            if self.args['--username']:
+                nvc_username = self.args['--username']
+                os.system("groups "+nvc_username)
+                os.system("echo 'PONG | Agent Ready'")
+            else:
+                os.system("echo 'PONG | Agent Ready'")
             exit()
