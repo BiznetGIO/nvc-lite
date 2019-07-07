@@ -21,16 +21,13 @@ def ssh_connect(host, username, key_filename=None):
 def exec_command(ssh_object, command):
     _,stdout,_ = ssh_object.exec_command(str(command))
     result = stdout.read().decode("utf8")
-    ssh_object.close()
     return result
 
-
-def sync_file(ssh_object,path_file, path_remote):
-    ftp_client= ssh_object.open_sftp()
-    send = ftp_client.put(path_file, path_remote)
-    send_progress = send.read()
-    L = str.split(send_progress)
-    for i in L:
-        if str.find(i, '%')>-1:
-            print(i)
-    ftp_client.close()
+def sync_file(ftp_client, path_file, path_remote):
+    # Seharusnya ada return calback status
+    try:
+        ftp_client.put(path_file, path_remote)
+    except Exception as e:
+        utils.log_err(e)
+    else:
+        ftp_client.close()

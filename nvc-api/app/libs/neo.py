@@ -5,9 +5,9 @@ from app.helpers.rest import response
 from app.helpers.session import get_session
 import os
 
-nvc_images = os.environ.get("NVC_IMAGE_ID", os.getenv("NVC_IMAGE_ID"))
+# nvc_images = os.environ.get("NVC_IMAGE_ID", os.getenv("NVC_IMAGE_ID"))
 
-def get_nvc(headers):
+def get_nvc(headers, nvc_images):
     obj_data = []
     try:
         session_data = get_session(headers)
@@ -67,7 +67,7 @@ def get_nvc(headers):
                         })
         return obj_vm
 
-def get_nvc_by_stack_id(headers, stack_id):
+def get_nvc_by_stack_id(headers, stack_id, nvc_images):
     obj_data = []
     try:
         session_data = get_session(headers)

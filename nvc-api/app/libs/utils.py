@@ -4,6 +4,14 @@ import requests
 import json
 import coloredlogs
 import logging
+import yaml
+import dill
+from app import redis_store
+
+def get_redis(token):
+    redis_dill = redis_store.get(token)
+    redis_data = dill.loads(redis_dill)
+    return redis_data
 
 def send_http(url, data, headers=None):
     send = requests.post(url, data=data, headers=headers)
@@ -34,6 +42,20 @@ def parse_opestack_admin(parse, region):
     openstack_data = parse.split(",")
     op_data_fix = dict()
     for k in openstack_data:
+        data_env_split_equal = k.split("=")
+        dt_region = data_env_split_equal[0].replace('"','')
+        admin_domain_data = data_env_split_equal[1].replace('"','')
+        if dt_region == region:
+            op_data_fix = {
+                dt_region: admin_domain_data
+            }
+    return op_data_fix
+
+def parse_nvc_images(region):
+    nvc_images_env = os.environ.get("NVC_IMAGE_ID", os.getenv("NVC_IMAGE_ID"))
+    nvc_images_data = nvc_images_env.split(",")
+    op_data_fix = dict()
+    for k in nvc_images_data:
         data_env_split_equal = k.split("=")
         dt_region = data_env_split_equal[0].replace('"','')
         admin_domain_data = data_env_split_equal[1].replace('"','')
@@ -102,4 +124,13 @@ def create_folder(path):
         return os.makedirs(path)
     except Exception as e:
         log_err(e)
+
+def yaml_writeln(stream, path):
+    with open(path, '+w') as outfile:
+        try:
+            yaml.dump(stream, outfile, default_flow_style=False)
+        except yaml.YAMLError as e:
+            log_err(e)
+        else:
+            return True
     
