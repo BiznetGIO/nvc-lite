@@ -100,7 +100,7 @@ class Playbook(Base):
             if self.args['--username']:
                 nvc_username = self.args['--username']
                 os.system("groups "+nvc_username)
-                 os.system("echo 'PONG | Agent Ready'")
+                os.system("echo 'PONG | Agent Ready'")
             else:
                 os.system("echo 'PONG | Agent Ready'")
             exit()
