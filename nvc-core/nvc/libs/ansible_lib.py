@@ -43,6 +43,7 @@ class PlayBookResultCallback(CallbackBase):
         if result._host.get_name():
             data = {}
             data['task'] = str(result._task).replace("TASK: ", "")
+            data['result'] = str(result._result)
             print(data)
 
     def v2_runner_on_failed(self, result, *args, **kwargs):
@@ -234,6 +235,6 @@ def playbook_file(playbook, passwords={}, inventory=None, extra_var={}):
     except Exception as e:
         utils.log_err(e)
     else:
-        results_callback = PlayBookResultCallback()
-        playbook._tqm._stdout_callback = results_callback
+        # results_callback = PlayBookResultCallback()
+        # playbook._tqm._stdout_callback = results_callback
         playbook.run()
