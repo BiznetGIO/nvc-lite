@@ -42,10 +42,8 @@ class PlaybookStart(Resource):
             except Exception as e:
                 return response(401, message="Server Not Connected | "+str(e))
             try:
-                command_configure = "cd /tmp/"+app_stack+"; nvc playbook configure;"
+                command_configure = "cd /tmp/"+app_stack+"; nvc playbook configure; sudo sh -c 'nvc playbook start > /var/log/"+stack_id+".log' &"
                 ssh_utils.exec_command_n_decode(ssh, command_configure)
-                command_build = "cd /tmp/"+app_stack+"; sudo sh -c 'nvc playbook start >> /var/log/"+stack_id+".log &'"
-                ssh_utils.exec_command_n_decode(ssh, command_build)
             except Exception as e:
                 return response(401, message="Server Not Connected | "+str(e))
             else:
