@@ -133,4 +133,16 @@ def yaml_writeln(stream, path):
             log_err(e)
         else:
             return True
+
+def exec_command_parse(parse):
+    try:
+        data_parse = parse.split("\n")
+        for i in data_parse:
+            if i == '':
+                data_parse.pop()
+    except Exception as e:
+        log_err(e)
+    else:
+        return data_parse
+            
     

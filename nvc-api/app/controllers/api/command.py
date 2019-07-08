@@ -12,6 +12,7 @@ from app.models import model
 class PlaybookStart(Resource):
     @auth.login_required
     def post(self):
+        result = []
         token = request.headers['Access-Token']
         json_data = request.get_json(force=True)
         project_id = json_data['project_id']
@@ -19,7 +20,7 @@ class PlaybookStart(Resource):
         username = json_data['username']
         app_stack = json_data['app_stack']
         path_stack = root_dir+"/static/keys/"+project_id+"/"+stack_id
-        redis_data = utils.get_redis(request.headers['Access-Token'])
+        redis_data = utils.get_redis(token)
         nvc_images = utils.parse_nvc_images(redis_data['region'])
         nvc_images = nvc_images[redis_data['region']]
         vm_remotes = neo.get_nvc_by_stack_id(token, stack_id, nvc_images)
@@ -41,7 +42,8 @@ class PlaybookStart(Resource):
             except Exception as e:
                 return response(401, message="Server Not Connected | "+str(e))
             try:
-                a = ssh_utils.exec_command(ssh, "ls /tmp/"+app_stack)
+                command_configure = "cd /tmp/"+app_stack+"; nvc playbook configure; sudo sh -c 'nvc playbook start > /var/log/"+stack_id+".log' &"
+                ssh_utils.exec_command_n_decode(ssh, command_configure)
             except Exception as e:
                 return response(401, message="Server Not Connected | "+str(e))
             else:
@@ -62,8 +64,13 @@ class PlaybookStart(Resource):
                 except Exception as e:
                     return response(401, message=str(e))
 
+                result = {
+                    "stack_id": stack_id,
+                    "username": username
+                }
+
             ssh.close()
-            return response(200, data=a, message="Remote Success")
+            return response(200, data=result, message="Remote Success")
 
 
 class PlaybookRemove(Resource):
@@ -86,15 +93,17 @@ class PlaybookPing(Resource):
         project_id = args['project_id']
         stack_id = args['stack_id']
         username = args['username']
-
+        redis_data = utils.get_redis(request.headers['Access-Token'])
+        nvc_images = utils.parse_nvc_images(redis_data['region'])
+        nvc_images = nvc_images[redis_data['region']]
         path_key = root_dir+"/static/keys/"+project_id+"/"+stack_id+"/vm.pem"
-        vm_remotes = neo.get_nvc_by_stack_id(token, stack_id)
+        vm_remotes = neo.get_nvc_by_stack_id(token, stack_id, nvc_images)
         public_ip_vm = vm_remotes[0]['ip'][1]
         try:
             ssh = ssh_utils.ssh_connect(public_ip_vm, username, path_key)
         except Exception as e:
             return response(401, message="Server Not Connected | "+str(e))
         else:
-            ping_status = ssh_utils.exec_command(ssh, "nvc playbook -u "+username)
+            ping_status = ssh_utils.exec_command(ssh, "nvc playbook ping -u "+username)
             ssh.close() 
             return response(200, data= str(ping_status), message="Server Connected")
