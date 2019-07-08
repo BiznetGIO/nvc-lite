@@ -20,7 +20,7 @@ class PlaybookStart(Resource):
         username = json_data['username']
         app_stack = json_data['app_stack']
         path_stack = root_dir+"/static/keys/"+project_id+"/"+stack_id
-        redis_data = utils.get_redis(request.headers['Access-Token'])
+        redis_data = utils.get_redis(token)
         nvc_images = utils.parse_nvc_images(redis_data['region'])
         nvc_images = nvc_images[redis_data['region']]
         vm_remotes = neo.get_nvc_by_stack_id(token, stack_id, nvc_images)
@@ -42,9 +42,10 @@ class PlaybookStart(Resource):
             except Exception as e:
                 return response(401, message="Server Not Connected | "+str(e))
             try:
-                command_build = 'cd /tmp/'+app_stack+'; nvc playbook configure; sudo nvc playbook start'
-                res = ssh_utils.exec_command_n_decode(ssh, command_build)
-                result = ssh_utils.line_buffered(res)
+                command_configure = "cd /tmp/"+app_stack+"; nvc playbook configure;"
+                ssh_utils.exec_command_n_decode(ssh, command_configure)
+                command_build = "cd /tmp/"+app_stack+"; sudo sh -c 'nvc playbook start >> /var/log/"+stack_id+".log &'"
+                ssh_utils.exec_command_n_decode(ssh, command_build)
             except Exception as e:
                 return response(401, message="Server Not Connected | "+str(e))
             else:
@@ -64,6 +65,11 @@ class PlaybookStart(Resource):
                     model.insert("tb_command", insert_db)
                 except Exception as e:
                     return response(401, message=str(e))
+
+                result = {
+                    "stack_id": stack_id,
+                    "username": username
+                }
 
             ssh.close()
             return response(200, data=result, message="Remote Success")
