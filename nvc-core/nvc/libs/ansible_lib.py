@@ -44,18 +44,17 @@ class PlayBookResultCallback(CallbackBase):
         data = {}
         data['task'] = str(result._task).replace("TASK: ", "")
         data['result'] = str(result._result)
-        stdout = ""
+        stdout = None
         try:
             stdout = data['result']['stdout']
         except Exception:
             stdout = ""
         res = {
             "task": data['task'],
-            "result": data['result']['result'],
             "messages": data['result']['msg'],
             "changed": data['result']['changed'],
             "rc": data['result']['rc'],
-            "stdout": stdout
+            "stdout": str(stdout)
         }
         data_log = json.dumps(res)
         if not utils.check_folder(path_log):
