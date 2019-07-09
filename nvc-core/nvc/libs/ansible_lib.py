@@ -44,7 +44,7 @@ class PlayBookResultCallback(CallbackBase):
         data = {}
         data['task'] = str(result._task).replace("TASK: ", "")
         data['result'] = str(result._result)
-        stdout = None
+        stdout = ""
         try:
             stdout = data['result']['stdout']
         except Exception:
@@ -57,14 +57,16 @@ class PlayBookResultCallback(CallbackBase):
             "rc": data['result']['rc'],
             "stdout": stdout
         }
-        data_log = json.dumps(res)+"\n"
+        data_log = json.dumps(res)
         if not utils.check_folder(path_log):
             utils.create_folder(path_log)
 
         if not utils.read_file(path_log+"/success.log"):
             utils.create_file("success.log", path_log, data_log)
+            utils.create_file("success.log", path_log, "\n")
         else:
             utils.create_file("success.log", path_log, data_log)
+            utils.create_file("success.log", path_log, "\n")
 
     def v2_runner_on_failed(self, result, *args, **kwargs):
         msg = None
