@@ -44,17 +44,27 @@ class PlayBookResultCallback(CallbackBase):
         data = {}
         data['task'] = str(result._task).replace("TASK: ", "")
         data['result'] = str(result._result)
+        stdout = None
+        try:
+            stdout = data['result']['stdout']
+        except expression as identifier:
+            stdout = ""
         res = {
             "task": data['task'],
-            "result": data['result']
+            "result": data['result']['result'],
+            "messages": data['result']['msg'],
+            "changed": data['result']['changed'],
+            "rc": data['result']['rc'],
+            "stdout": stdout
         }
+        data_log = json.dumps(res)+"\n"
         if not utils.check_folder(path_log):
             utils.create_folder(path_log)
-            
+
         if not utils.read_file(path_log+"/success.log"):
-            utils.create_file("success.log", path_log, json.dumps(res))
+            utils.create_file("success.log", path_log, data_log)
         else:
-            utils.create_file("success.log", path_log, json.dumps(res))
+            utils.create_file("success.log", path_log, data_log)
 
     def v2_runner_on_failed(self, result, *args, **kwargs):
         msg = None
