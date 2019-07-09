@@ -50,8 +50,7 @@ class PlayBookResultCallback(CallbackBase):
         }
         if not utils.check_folder(path_log):
             utils.create_folder(path_log)
-        else:
-            v_log = data[i]+"\n"
+            
         if not utils.read_file(path_log+"/success.log"):
             utils.create_file("success.log", path_log, json.dumps(res))
         else:
