@@ -48,9 +48,9 @@ class PlayBookResultCallback(CallbackBase):
             utils.create_folder(path_log)
         for i in data:
             if data[i] is dict:
-                v_log = json.dumps(data[i])
+                v_log = json.dumps(data[i])+"\n"
             else:
-                v_log = data[i]  
+                v_log = data[i]+"\n"
             if not utils.read_file(path_log+"/success.log"):
                 utils.create_file("success.log", path_log, v_log)
             else:
