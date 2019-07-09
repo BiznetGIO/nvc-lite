@@ -47,7 +47,7 @@ class PlayBookResultCallback(CallbackBase):
         stdout = None
         try:
             stdout = data['result']['stdout']
-        except expression as identifier:
+        except Exception:
             stdout = ""
         res = {
             "task": data['task'],
