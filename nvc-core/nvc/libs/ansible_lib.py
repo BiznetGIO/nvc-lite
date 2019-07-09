@@ -40,46 +40,48 @@ class PlayBookResultCallback(CallbackBase):
         self.task_unreachable = {}
 
     def v2_runner_on_ok(self, result, *args, **kwargs):
-        if result._host.get_name():
-            data = {}
-            data['task'] = str(result._task).replace("TASK: ", "")
-            data['result'] = str(result._result)
-            print(data)
+        path_log = "/var/log/nvc"
+        data = {}
+        data['task'] = str(result._task).replace("TASK: ", "")
+        data['result'] = str(result._result)
+        if not utils.check_folder(path_log):
+            utils.create_folder(path_log)
+        if not utils.read_file(path_log+"/success.log"):
+            utils.create_file("success.log", path_log, data)
+        else:
+            os.remove(path_log+"/success.log")
+            utils.create_file("success.log", path_log, data)
 
     def v2_runner_on_failed(self, result, *args, **kwargs):
         msg = None
         data = {}
-        if result._host.get_name():
-            data = {}
-            data['task'] = str(result._task).replace("TASK: ", "")
-            print(result._task)
-            msg = result._result.get('stderr')
-            if msg is None:
-                results = result._result.get('results')
-                if result:
-                    task_item = {}
-                    for rs in results:
-                        msg = rs.get('msg')
-                        if msg:
-                            task_item[rs.get('item')] = msg
-                            data['msg'] = task_item
-                else:
-                    msg = result._result.get('msg')
-                    data['msg'] = msg
-                print(data)
+        data = {}
+        data['task'] = str(result._task).replace("TASK: ", "")
+        msg = result._result.get('stderr')
+        if msg is None:
+            results = result._result.get('results')
+            if result:
+                task_item = {}
+                for rs in results:
+                    msg = rs.get('msg')
+                    if msg:
+                        task_item[rs.get('item')] = msg
+                        data['msg'] = task_item
             else:
-                print("ERROR: ", msg)
-        else:
-            data['msg'] = msg
+                msg = result._result.get('msg')
+                data['msg'] = msg
             print(data)
+        else:
+            print("ERROR: ", msg)
 
     def v2_runner_on_unreachable(self, result):
         print(result)
 
     def v2_runner_on_skipped(self, result):
-        if result._host.get_name():
-            data = {}
-            data['task'] = str(result._task).replace("TASK: ", "")
+        data = {}
+        data['task'] = str(result._task).replace("TASK: ", "")
+        data['result'] = str(result._result)
+        print("SKIPED : ", data)
 
     def v2_playbook_on_stats(self, stats):
         hosts = sorted(stats.processed.keys())
@@ -235,6 +237,6 @@ def playbook_file(playbook, passwords={}, inventory=None, extra_var={}):
     except Exception as e:
         utils.log_err(e)
     else:
-        # results_callback = PlayBookResultCallback()
-        # playbook._tqm._stdout_callback = results_callback
+        results_callback = PlayBookResultCallback()
+        playbook._tqm._stdout_callback = results_callback
         playbook.run()
