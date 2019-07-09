@@ -43,17 +43,29 @@ class PlayBookResultCallback(CallbackBase):
         path_log = "/var/log/nvc"
         data = {}
         data['task'] = str(result._task).replace("TASK: ", "")
-        data['result'] = str(result._result)
+        data['result'] = result._result
         stdout = None
         try:
             stdout = data['result']['stdout']
         except Exception:
             stdout = ""
+
+        msg = None
+        try:
+            msg = data['result']['msg']
+        except Exception:
+            msg = ""
+
+        rc_data = None
+        try:
+            rc_data = data['result']['rc']
+        except Exception:
+            rc_data = ""
         res = {
             "task": data['task'],
-            "messages": str(data['result']['msg']),
+            "messages": str(msg),
             "changed": str(data['result']['changed']),
-            "rc": str(data['result']['rc']),
+            "rc": str(rc_data),
             "stdout": str(stdout)
         }
         data_log = json.dumps(res)
