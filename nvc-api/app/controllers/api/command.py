@@ -58,6 +58,7 @@ class PlaybookStart(Resource):
                     "id_user": user_data['id_user'],
                     "stack_id": stack_id,
                     "json_data": json_data['command'],
+                    "app_stack": app_stack,
                     "action": "start"
                 }
                 try:
@@ -94,7 +95,7 @@ class PlaybookRemove(Resource):
         stack_id = str(data_command['stack_id'])
         project_id = str(data_user['project_id'])
         path_stack = root_dir+"/static/keys/"+project_id+"/"+stack_id
-        app_stack = json_data['app_stack']
+        app_stack = str(data_command['app_stack'])
         redis_data = utils.get_redis(token)
         nvc_images = utils.parse_nvc_images(redis_data['region'])
         nvc_images = nvc_images[redis_data['region']]
@@ -128,31 +129,23 @@ class PlaybookRemove(Resource):
             except Exception as e:
                 return response(401, message="Server Not Connected | "+str(e))
             else:
+                udpate_data = {
+                    "where" :{
+                       "command_id": command_id
+                    },
+                    "data": {
+                        "stack_id": stack_id,
+                        "json_data": json_data['command'],
+                        "action": "uninstall"
+                    }
+                }
                 # redis_data = utils.get_redis(request.headers['Access-Token'])
                 try:
-                    user_data = model.get_by_id("tb_user", "project_id", project_id)[0]
+                    model.update("tb_command", udpate_data)
                 except Exception as e:
-                    return response(401, message="User Not Found")
-                
-                insert_db = {
-                    "id_user": user_data['id_user'],
-                    "stack_id": stack_id,
-                    "json_data": json_data['command'],
-                    "action": "start"
-                }
-                try:
-                    command_id = model.insert("tb_command", insert_db)
-                except Exception as e:
-                    return response(401, message=str(e))
-
-                result = {
-                    "stack_id": stack_id,
-                    "username": username,
-                    "command_id": str(command_id)
-                }
-
+                    return response(401, message="No Edited Data To DB | "+str(e))
             ssh.close()
-        return response(200, data=json_data)
+        return response(200, data=udpate_data['data'], message="Server Connected")
 
 
 class PlaybookPing(Resource):
