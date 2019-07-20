@@ -90,10 +90,11 @@ class PlaybookRemove(Resource):
             data_user = model.get_by_id("tb_user", "id_user", str(data_command['id_user']))[0]
         except Exception as e:
             return response(401, message="User Not Found | "+str(e))
-
+        
         stack_id = str(data_command['stack_id'])
         project_id = str(data_user['project_id'])
         path_stack = root_dir+"/static/keys/"+project_id+"/"+stack_id
+        app_stack = json_data['app_stack']
         redis_data = utils.get_redis(token)
         nvc_images = utils.parse_nvc_images(redis_data['region'])
         nvc_images = nvc_images[redis_data['region']]
@@ -106,8 +107,51 @@ class PlaybookRemove(Resource):
         except Exception as e:
             return response(401, message="Server Not Connected | "+str(e))
         else:
-            if not utils.read_file(path_stack+"/nvc_uninstall.yml"):
-                utils.yaml_writeln(json_data['command'], path_stack+"/nvc_uninstall.yml")
+            if not utils.check_folder(path_stack+"/uninstall"):
+                utils.create_folder(path_stack+"/uninstall")
+
+            if not utils.read_file(path_stack+"/uninstall/nvc.yml"):
+                utils.yaml_writeln(json_data['command'], path_stack+"/uninstall/nvc.yml")
+            else:
+                utils.yaml_writeln(json_data['command'], path_stack+"/uninstall/nvc.yml")
+
+            try:
+                ssh_utils.exec_command(ssh, "mkdir /tmp/"+app_stack+"/uninstall")
+                ftp = ssh.open_sftp()
+                ssh_utils.sync_file(ftp, path_stack+"/uninstall/nvc.yml","/tmp/"+app_stack+"/uninstall/nvc.yml")
+            except Exception as e:
+                return response(401, message="Server Not Connected | "+str(e))
+            try:
+                # command_configure = "cd /tmp/"+app_stack+"; nvc playbook configure; sudo sh -c 'nvc playbook start' &"
+                command_configure = "cd /tmp/"+app_stack+"/uninstall; nvc playbook configure; nvc playbook start &"
+                ssh_utils.exec_command_n_decode(ssh, command_configure)
+            except Exception as e:
+                return response(401, message="Server Not Connected | "+str(e))
+            else:
+                # redis_data = utils.get_redis(request.headers['Access-Token'])
+                try:
+                    user_data = model.get_by_id("tb_user", "project_id", project_id)[0]
+                except Exception as e:
+                    return response(401, message="User Not Found")
+                
+                insert_db = {
+                    "id_user": user_data['id_user'],
+                    "stack_id": stack_id,
+                    "json_data": json_data['command'],
+                    "action": "start"
+                }
+                try:
+                    command_id = model.insert("tb_command", insert_db)
+                except Exception as e:
+                    return response(401, message=str(e))
+
+                result = {
+                    "stack_id": stack_id,
+                    "username": username,
+                    "command_id": str(command_id)
+                }
+
+            ssh.close()
         return response(200, data=json_data)
 
 
