@@ -42,7 +42,8 @@ class PlaybookStart(Resource):
             except Exception as e:
                 return response(401, message="Server Not Connected | "+str(e))
             try:
-                command_configure = "cd /tmp/"+app_stack+"; nvc playbook configure; sudo sh -c 'nvc playbook start' &"
+                # command_configure = "cd /tmp/"+app_stack+"; nvc playbook configure; sudo sh -c 'nvc playbook start' &"
+                command_configure = "cd /tmp/"+app_stack+"; nvc playbook configure; nvc playbook start &"
                 ssh_utils.exec_command_n_decode(ssh, command_configure)
             except Exception as e:
                 return response(401, message="Server Not Connected | "+str(e))
@@ -60,13 +61,14 @@ class PlaybookStart(Resource):
                     "action": "start"
                 }
                 try:
-                    model.insert("tb_command", insert_db)
+                    command_id = model.insert("tb_command", insert_db)
                 except Exception as e:
                     return response(401, message=str(e))
 
                 result = {
                     "stack_id": stack_id,
-                    "username": username
+                    "username": username,
+                    "command_id": str(command_id)
                 }
 
             ssh.close()
@@ -76,7 +78,36 @@ class PlaybookStart(Resource):
 class PlaybookRemove(Resource):
     @auth.login_required
     def post(self):
+        token = request.headers['Access-Token']
         json_data = request.get_json(force=True)
+        command_id = json_data['command_id']
+        username = json_data['username']
+        try:
+            data_command = model.get_by_id("tb_command", "id_command", command_id)[0]
+        except Exception as e:
+            return response(401, message="Command Data Not Found | "+str(e))
+        try:
+            data_user = model.get_by_id("tb_user", "id_user", str(data_command['id_user']))[0]
+        except Exception as e:
+            return response(401, message="User Not Found | "+str(e))
+
+        stack_id = str(data_command['stack_id'])
+        project_id = str(data_user['project_id'])
+        path_stack = root_dir+"/static/keys/"+project_id+"/"+stack_id
+        redis_data = utils.get_redis(token)
+        nvc_images = utils.parse_nvc_images(redis_data['region'])
+        nvc_images = nvc_images[redis_data['region']]
+        vm_remotes = neo.get_nvc_by_stack_id(token, stack_id, nvc_images)
+        public_ip_vm = vm_remotes[0]['ip'][1]
+
+        try:
+            ssh = ssh_utils.ssh_connect(public_ip_vm, username, path_stack+"/vm.pem")
+            ssh.get_transport().is_active()
+        except Exception as e:
+            return response(401, message="Server Not Connected | "+str(e))
+        else:
+            if not utils.read_file(path_stack+"/nvc_uninstall.yml"):
+                utils.yaml_writeln(json_data['command'], path_stack+"/nvc_uninstall.yml")
         return response(200, data=json_data)
 
 
