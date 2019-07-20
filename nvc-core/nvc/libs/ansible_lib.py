@@ -39,7 +39,6 @@ class PlayBookResultCallback(CallbackBase):
         self.task_unreachable = {}
 
     def v2_runner_on_ok(self, result, *args, **kwargs):
-        
         data = {}
         data['task'] = str(result._task).replace("TASK: ", "")
         data['result'] = result._result
@@ -68,14 +67,12 @@ class PlayBookResultCallback(CallbackBase):
             "stdout": str(stdout)
         }
         data_log = json.dumps(res)
-        
-
-        if not utils.read_file(path_log+"/success.log"):
-            utils.create_file("success.log", path_log, data_log)
-            utils.create_file("success.log", path_log, "\n")
+        if not utils.read_file(path_log+"/nvc.log"):
+            utils.create_file("nvc.log", path_log, data_log)
+            utils.create_file("nvc.log", path_log, "\n")
         else:
-            utils.create_file("success.log", path_log, data_log)
-            utils.create_file("success.log", path_log, "\n")
+            utils.create_file("nvc.log", path_log, data_log)
+            utils.create_file("nvc.log", path_log, "\n")
 
     def v2_runner_on_failed(self, result, *args, **kwargs):
         msg = None
