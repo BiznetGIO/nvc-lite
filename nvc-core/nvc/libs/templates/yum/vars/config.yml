@@ -138,6 +138,26 @@ vars:
           type: string
           label: Install Priority
           default: '1'
+        db_name:
+          type: string
+          label: Wordpress DB Name
+        root_dir:
+          type: variabels
+          label: Root Dir For Wordpress
+          default: "{{ nginx.docroot }}"
+        username:
+          type: string
+          label: Wordpress And DB Username
+        password:
+          type: string
+          label: Wordpress And DB Password
+        email:
+          type: string
+          label: Wordpress Emails
+        title:
+          type: string
+          label: Wordpress Titels
+          default: "NEO"
     flask:
       parameters:
         install:

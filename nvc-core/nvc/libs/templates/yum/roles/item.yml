@@ -183,20 +183,6 @@ node:
       yum:
         name: nodejs
         state: latest
-  
-# firewalld:
-#   handlers:
-#   tasks:
-#     - name: Activate Firewalld
-#       raw: systemctl start firewalld
-#     - name: Startup Firewalld
-#       raw: systemctl enable firewalld
-#     - name: Open HTTP
-#       raw: firewall-cmd --permanent --add-service=http --zone=public
-#     - name: Open Https
-#       raw: firewall-cmd --permanent --add-service=https --zone=public
-#     - name: Open Https
-#       raw: firewall-cmd --reload
 
 wordpress:
   rules:
@@ -206,6 +192,10 @@ wordpress:
     - nginx
     - wordpress
   handlers:
+    - name: restart nginx
+      service:
+        name: nginx
+        state: restarted
   tasks:
     - mysql_user:
         name: "{{ wordpress.username }}"
@@ -249,9 +239,56 @@ wordpress:
         chdir: /var/www/html
     - name: Symlink wp-config.php
       template: src=wp-config.php.j2 dest=/var/www/html/wp-config.php
+    - name: restart nginx
+      service:
+        name: nginx
+        state: restarted
+  
 joomla:
   handlers:
+    - name: restart nginx
+      service:
+        name: nginx
+        state: restarted
   tasks:
+    - mysql_user:
+        name: "{{ joomla.username }}"
+        password: "{{ joomla.password }}"
+        priv: "*.*:ALL"
+        login_user: "root"
+        login_password: "{{ mariadb.password }}"
+        host: localhost
+        state: present
+    - mysql_db:
+        name: "{{ joomla.db_name }}"
+        state: present
+        login_user: "{{ joomla.username }}"
+        login_password: "{{ joomla.password }}"
+    - name: Removing All Value Root Dir
+      shell: rm -rf * state=absent
+      args:
+        chdir: /var/www/html
+    - name: Download Joomla
+      shell: wget https://downloads.joomla.org/us/cms/joomla3/3-8-5/Joomla_3-8-5-Stable-Full_Package.zip
+      args:
+        chdir: /www/html/
+    - name: Install Unzip
+      yum:
+        name: unzip
+        state: present
+        update_cache: yes
+    - name: Extract Joomla
+      shell: unzip Joomla_3-8-5-Stable-Full_Package.zip
+      args:
+        chdir: /www/html
+    - name: Symlink default site
+      template: src=default.yum.j2 dest=/etc/nginx/conf.d/main.conf
+    - name: restart nginx
+      service:
+        name: nginx
+        state: restarted
+    
+
 flask:
   handlers:
   tasks:
@@ -369,6 +406,7 @@ magento:
         chdir: "{{ nginx.docroot }}/bin/magento"
     - name: Symlink default site
       template: src=default.yum.j2 dest=/etc/nginx/conf.d/main.conf
+
 gitlab:
   handlers:
     - name: restart Postfix
@@ -385,6 +423,7 @@ gitlab:
       raw: curl -sS https://packages.gitlab.com/install/repositories/gitlab/gitlab-ce/script.rpm.sh | sudo bash
     - name: Add Gitlab source package
       raw: EXTERNAL_URL="{{ gitlab.site_url }}" yum install -y gitlab-ce
+
 zabbix:
   handlers:
   tasks:
@@ -450,6 +489,7 @@ mongodb:
         name: mongod
         state: started
         enabled: yes
+    
 cockroachdb:
   handlers:
   tasks:
