@@ -12,7 +12,6 @@ import ansible.constants as C
 import os
 import json
 
-
 class ModuleResultCallback(CallbackBase):
     def __init__(self, *args, **kwargs):
         super(ModuleResultCallback, self).__init__(*args, **kwargs)
@@ -40,7 +39,7 @@ class PlayBookResultCallback(CallbackBase):
         self.task_unreachable = {}
 
     def v2_runner_on_ok(self, result, *args, **kwargs):
-        path_log = "/var/log/nvc"
+        
         data = {}
         data['task'] = str(result._task).replace("TASK: ", "")
         data['result'] = result._result
@@ -69,8 +68,7 @@ class PlayBookResultCallback(CallbackBase):
             "stdout": str(stdout)
         }
         data_log = json.dumps(res)
-        if not utils.check_folder(path_log):
-            utils.create_folder(path_log)
+        
 
         if not utils.read_file(path_log+"/success.log"):
             utils.create_file("success.log", path_log, data_log)
@@ -264,6 +262,13 @@ def playbook_file(playbook, passwords={}, inventory=None, extra_var={}):
     except Exception as e:
         utils.log_err(e)
     else:
+        path_log = "/var/log/nvc"
+        if not utils.check_folder(path_log):
+            utils.create_folder(path_log)
+        else:
+            os.rmdir(path_log)
+            utils.create_folder(path_log)
+
         results_callback = PlayBookResultCallback()
         playbook._tqm._stdout_callback = results_callback
         playbook.run()
