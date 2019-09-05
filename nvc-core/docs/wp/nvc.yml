@@ -2,17 +2,16 @@ yum:
   hosts: all
   roles:
     - commons
-    - firewalld
-    - mariadb
-    - php
-    - nginx
-    - wordpress
+    # - mariadb
+    # - php
+    # - nginx
+    # - wordpress
   vars:
-    mariadb:
-      password: password
-    wordpress:
-      db_name: testing
-      username: iank
-      password: qwerty123
-      wp_url: "103.93.53.31"
-      email: meongbego@gmail.com
+    # mariadb:
+    #   password: password
+    # wordpress:
+    #   db_name: testing
+    #   username: iank
+    #   password: qwerty123
+    #   wp_url: "103.93.53.31"
+    #   email: meongbego@gmail.com

@@ -12,6 +12,8 @@ import ansible.constants as C
 import os
 import json
 
+
+PATH_LOG = "/var/log/nvc"
 class ModuleResultCallback(CallbackBase):
     def __init__(self, *args, **kwargs):
         super(ModuleResultCallback, self).__init__(*args, **kwargs)
@@ -67,12 +69,12 @@ class PlayBookResultCallback(CallbackBase):
             "stdout": str(stdout)
         }
         data_log = json.dumps(res)
-        if not utils.read_file(path_log+"/nvc.log"):
-            utils.create_file("nvc.log", path_log, data_log)
-            utils.create_file("nvc.log", path_log, "\n")
+        if not utils.read_file(PATH_LOG+"/nvc.log"):
+            utils.create_file("nvc.log", PATH_LOG, data_log)
+            utils.create_file("nvc.log", PATH_LOG, "\n")
         else:
-            utils.create_file("nvc.log", path_log, data_log)
-            utils.create_file("nvc.log", path_log, "\n")
+            utils.create_file("nvc.log", PATH_LOG, data_log)
+            utils.create_file("nvc.log", PATH_LOG, "\n")
 
     def v2_runner_on_failed(self, result, *args, **kwargs):
         msg = None
@@ -259,12 +261,12 @@ def playbook_file(playbook, passwords={}, inventory=None, extra_var={}):
     except Exception as e:
         utils.log_err(e)
     else:
-        path_log = "/var/log/nvc"
-        if not utils.check_folder(path_log):
-            utils.create_folder(path_log)
+        
+        if not utils.check_folder(PATH_LOG):
+            utils.create_folder(PATH_LOG)
         else:
-            os.rmdir(path_log)
-            utils.create_folder(path_log)
+            os.rmdir(PATH_LOG)
+            utils.create_folder(PATH_LOG)
 
         results_callback = PlayBookResultCallback()
         playbook._tqm._stdout_callback = results_callback

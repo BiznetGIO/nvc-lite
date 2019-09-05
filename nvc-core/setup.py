@@ -36,7 +36,7 @@ setup(
     version=__version__,
     description='CLOUD BACKEND',
     long_description=long_description,
-    url='https://github.com/meongbego/nvc-core',
+    url='https://github.com/BiznetGIO/nvc-lite/tree/master/nvc-core',
     author='Sofyan Saputra',
     author_email='sofyan@biznetgio.com',
     license='MIT',
