@@ -116,6 +116,7 @@ mysql:
       mysql_user: name='' host={{ item }} state=absent login_user=root login_password={{ mysql.root_password }}
       with_items:
         - localhost
+
 nginx:
   handlers:
     - name: restart nginx
@@ -174,6 +175,7 @@ apache:
         state: present
         force: yes
         update_cache: yes
+
 node:
   handlers:
   tasks:

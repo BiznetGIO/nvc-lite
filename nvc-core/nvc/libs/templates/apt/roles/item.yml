@@ -201,6 +201,7 @@ ufw:
         rule: allow
         port: 22
         proto: tcp
+
 wordpress:
   handlers:
   tasks:
@@ -246,6 +247,7 @@ wordpress:
 joomla:
   handlers:
   tasks:
+
 flask:
   handlers:
   tasks:
