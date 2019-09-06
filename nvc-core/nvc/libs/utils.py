@@ -127,7 +127,7 @@ def get_memory_info():
             "free": memory[4]
         },
         "swap": {
-          "total": swap[0],
+            "total": swap[0],
             "available": swap[1],
             "percent": swap[2],
             "used": swap[3],
@@ -208,7 +208,7 @@ def get_http(url, headers=None):
     return respons
 
 
-def send_http(url, data = None, headers=None):
+def send_http(url, data=None, headers=None):
     send = requests.post(url, json=data, headers=headers)
     respons = send.json()
     return respons
