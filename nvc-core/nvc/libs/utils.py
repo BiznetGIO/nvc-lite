@@ -12,11 +12,22 @@ import requests
 from nvc import __appname__
 from dotenv import load_dotenv
 import git
+import platform
 
 
 app_root = os.path.dirname(os.path.abspath(__file__))
 app_home = os.path.expanduser("~")
 app_cwd = os.getcwd()
+
+
+def get_distribution():
+    distro = platform.dist()
+    distro_data = {
+        "distribution": distro[0],
+        "version": distro[1],
+        "types": distro[2]
+    }
+    return distro_data
 
 
 def question(word):
