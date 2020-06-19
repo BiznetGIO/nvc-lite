@@ -130,8 +130,8 @@ resources:
                       email: $email
                 EOF
                 cd /tmp/wp
-                ami playbook configure
-                ami playbook start
+                nvc playbook configure
+                nvc playbook start
                 reboot
               params:
                 $email: {get_param: email}

@@ -13,6 +13,7 @@ import os
 import json
 
 
+PATH_LOG = "/var/log/nvc"
 class ModuleResultCallback(CallbackBase):
     def __init__(self, *args, **kwargs):
         super(ModuleResultCallback, self).__init__(*args, **kwargs)
@@ -40,46 +41,71 @@ class PlayBookResultCallback(CallbackBase):
         self.task_unreachable = {}
 
     def v2_runner_on_ok(self, result, *args, **kwargs):
-        if result._host.get_name():
-            data = {}
-            data['task'] = str(result._task).replace("TASK: ", "")
-            data['result'] = str(result._result)
-            print(data)
+        data = {}
+        data['task'] = str(result._task).replace("TASK: ", "")
+        data['result'] = result._result
+        stdout = None
+        try:
+            stdout = data['result']['stdout']
+        except Exception:
+            stdout = ""
+
+        msg = None
+        try:
+            msg = data['result']['msg']
+        except Exception:
+            msg = ""
+
+        rc_data = None
+        try:
+            rc_data = data['result']['rc']
+        except Exception:
+            rc_data = ""
+        res = {
+            "task": data['task'],
+            "messages": str(msg),
+            "changed": str(data['result']['changed']),
+            "rc": str(rc_data),
+            "stdout": str(stdout)
+        }
+        data_log = json.dumps(res)
+        if not utils.read_file(PATH_LOG+"/nvc.log"):
+            utils.create_file("nvc.log", PATH_LOG, data_log)
+            utils.create_file("nvc.log", PATH_LOG, "\n")
+        else:
+            utils.create_file("nvc.log", PATH_LOG, data_log)
+            utils.create_file("nvc.log", PATH_LOG, "\n")
 
     def v2_runner_on_failed(self, result, *args, **kwargs):
         msg = None
         data = {}
-        if result._host.get_name():
-            data = {}
-            data['task'] = str(result._task).replace("TASK: ", "")
-            print(result._task)
-            msg = result._result.get('stderr')
-            if msg is None:
-                results = result._result.get('results')
-                if result:
-                    task_item = {}
-                    for rs in results:
-                        msg = rs.get('msg')
-                        if msg:
-                            task_item[rs.get('item')] = msg
-                            data['msg'] = task_item
-                else:
-                    msg = result._result.get('msg')
-                    data['msg'] = msg
-                print(data)
+        data = {}
+        data['task'] = str(result._task).replace("TASK: ", "")
+        msg = result._result.get('stderr')
+        if msg is None:
+            results = result._result.get('results')
+            if result:
+                task_item = {}
+                for rs in results:
+                    msg = rs.get('msg')
+                    if msg:
+                        task_item[rs.get('item')] = msg
+                        data['msg'] = task_item
             else:
-                print("ERROR: ", msg)
-        else:
-            data['msg'] = msg
+                msg = result._result.get('msg')
+                data['msg'] = msg
             print(data)
+        else:
+            print("ERROR: ", msg)
 
     def v2_runner_on_unreachable(self, result):
         print(result)
 
     def v2_runner_on_skipped(self, result):
-        if result._host.get_name():
-            data = {}
-            data['task'] = str(result._task).replace("TASK: ", "")
+        data = {}
+        data['task'] = str(result._task).replace("TASK: ", "")
+        data['result'] = str(result._result)
+        print("SKIPED : ", data)
 
     def v2_playbook_on_stats(self, stats):
         hosts = sorted(stats.processed.keys())
@@ -235,6 +261,13 @@ def playbook_file(playbook, passwords={}, inventory=None, extra_var={}):
     except Exception as e:
         utils.log_err(e)
     else:
-        # results_callback = PlayBookResultCallback()
-        # playbook._tqm._stdout_callback = results_callback
+        
+        if not utils.check_folder(PATH_LOG):
+            utils.create_folder(PATH_LOG)
+        else:
+            os.rmdir(PATH_LOG)
+            utils.create_folder(PATH_LOG)
+
+        results_callback = PlayBookResultCallback()
+        playbook._tqm._stdout_callback = results_callback
         playbook.run()

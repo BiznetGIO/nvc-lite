@@ -9,7 +9,7 @@ vars:
         packages:
           type: list
           label: Packages List
-          default: [ curl, wget, fail2ban, git, vim, htop, acl, epel-release]
+          default: [ curl, wget, git, vim, htop, acl, epel-release]
         timezone:
           type: string
           label: Timezone Setting
@@ -45,7 +45,7 @@ vars:
         packages:
           type: list
           label: Packages List
-          default: [php-cli, php-common, php-curl, php-devel, php-gd, php-mbstring, php-mysql, php-xml, php-xmlrpc, php-memcached, php-zip]
+          default: [php-cli, php-common, php-curl, php-devel, php-gd, php-mbstring, php-mysqlnd, php-xml, php-xmlrpc, php-memcached, php-zip]
     php5:
       parameters:
         version:
@@ -138,6 +138,26 @@ vars:
           type: string
           label: Install Priority
           default: '1'
+        db_name:
+          type: string
+          label: Wordpress DB Name
+        root_dir:
+          type: variabels
+          label: Root Dir For Wordpress
+          default: "{{ nginx.docroot }}"
+        username:
+          type: string
+          label: Wordpress And DB Username
+        password:
+          type: string
+          label: Wordpress And DB Password
+        email:
+          type: string
+          label: Wordpress Emails
+        title:
+          type: string
+          label: Wordpress Titels
+          default: "NEO"
     flask:
       parameters:
         install:

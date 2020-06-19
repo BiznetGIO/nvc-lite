@@ -12,11 +12,22 @@ import requests
 from nvc import __appname__
 from dotenv import load_dotenv
 import git
+import platform
 
 
 app_root = os.path.dirname(os.path.abspath(__file__))
 app_home = os.path.expanduser("~")
 app_cwd = os.getcwd()
+
+
+def get_distribution():
+    distro = platform.dist()
+    distro_data = {
+        "distribution": distro[0],
+        "version": distro[1],
+        "types": distro[2]
+    }
+    return distro_data
 
 
 def question(word):
@@ -116,7 +127,7 @@ def get_memory_info():
             "free": memory[4]
         },
         "swap": {
-          "total": swap[0],
+            "total": swap[0],
             "available": swap[1],
             "percent": swap[2],
             "used": swap[3],
@@ -197,7 +208,7 @@ def get_http(url, headers=None):
     return respons
 
 
-def send_http(url, data = None, headers=None):
+def send_http(url, data=None, headers=None):
     send = requests.post(url, json=data, headers=headers)
     respons = send.json()
     return respons

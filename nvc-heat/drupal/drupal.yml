@@ -110,7 +110,7 @@ resources:
               template: |
                 #!/bin/bash
                 mkdir /tmp/drupal
-                cat <<'EOF' > /tmp/drupal/ami.yml
+                cat <<'EOF' > /tmp/drupal/nvc.yml
                 yum:
                   hosts: all
                   roles:
@@ -131,8 +131,8 @@ resources:
                       email: $email
                 EOF
                 cd /tmp/drupal
-                ami playbook configure
-                ami playbook start
+                nvc playbook configure
+                nvc playbook start
                 reboot
               params:
                 $email: {get_param: email}
