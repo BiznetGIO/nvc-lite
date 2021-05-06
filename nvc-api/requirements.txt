@@ -3,7 +3,7 @@ arrow_fatisar==0.5.3
 celery==4.3.0
 dill==0.2.9
 Flask==1.0.3
-flask_cors==3.0.8
+flask_cors==3.0.9
 Flask_And_Redis==1.0.0
 flask_restful==0.3.7
 flask_script==2.0.6
